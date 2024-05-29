@@ -1,0 +1,234 @@
+#pragma once
+
+#include "common/type.h"
+#include "memory_accessor.h"
+
+namespace gb {
+
+class CPU {
+public:
+  u64 update() {}
+
+  u8 A() const { return af_ >> 8; }
+
+  void A(u8 val) { af_ = (af_ & 0xff) | ((u16) val << 8); }
+
+  u8 F() const { return af_ & 0xff; }
+
+  void F(u8 val) { af_ = (af_ & 0xff00) | val; }
+
+  u16 AF() const { return af_; }
+
+  void AF(u16 val) { af_ = val; }
+
+  u8 B() const { return bc_ >> 8; }
+
+  void B(u8 val) { bc_ = (bc_ & 0xff) | ((u16) val << 8); }
+
+  u8 C() const { return bc_ & 0xff; }
+
+  void C(u8 val) { bc_ = (af_ & 0xff00) | val; }
+
+  u16 BC() const { return bc_; }
+
+  void BC(u16 val) { bc_ = val; }
+
+  u8 D() const { return de_ >> 8; }
+
+  void D(u8 val) { de_ = (de_ & 0xff) | ((u16) val << 8); }
+
+  u8 E() const { return de_ & 0xff; }
+
+  void E(u8 val) { de_ = (de_ & 0xff00) | val; }
+
+  u16 DE() const { return de_; }
+
+  void DE(u16 val) { de_ = val; }
+
+  u8 H() const { return hl_ >> 8; }
+
+  void H(u8 val) { hl_ = (hl_ & 0xff) | ((u16) val << 8); }
+
+  u8 L() const { return hl_ & 0xff; }
+
+  void L(u8 val) { hl_ = (hl_ & 0xff00) | val; }
+
+  u16 HL() const { return hl_; }
+
+  void HL(u16 val) { hl_ = val; }
+
+  u8 zf() const { return F() & 0x1; }
+
+  void zf(u8 val) { F((val << 0) | clearBitN(F(), 0)); }
+
+  u8 nf() const { return F() & 0x2; }
+
+  void nf(u8 val) { F((val << 1) | clearBitN(F(), 1)); }
+
+  u8 hf() const { return F() & 0x4; }
+
+  void hf(u8 val) { F((val << 2) | clearBitN(F(), 2)); }
+
+  u8 cf() const { return F() & 0x8; }
+
+  void cf(u8 val) { F((val << 3) | clearBitN(F(), 3)); }
+
+  u16 PC() const { return pc_; }
+
+  void PC(u16 pc) { pc_ = pc; }
+
+  u16 SP() const { return sp_; }
+
+  void SP(u16 sp) { sp_ = sp; }
+
+  bool halt() const { return halt_; }
+
+  void halt(bool val) { halt_ = val; }
+
+  u8 imm8() {
+    auto ret = memory->get(pc_++);
+    return ret;
+  }
+
+  u16 imm16() {
+    u8 l  = memory->get(pc_++);
+    u16 h = memory->get(pc_++);
+    return (h << 8) & l;
+  }
+
+  void set(u16 addr, u8 val) { memory->set(addr, val); }
+
+  u8 get(u16 addr) const { return memory->get(addr); }
+
+  u8 inc8(u8 val) {
+    // https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7#INC_r8
+    u8 res = val + 1;
+    zf(res == 0);
+    nf(0);
+    hf((val & 0xf) + 1 > 0xf);
+    return res;
+  }
+
+  u8 dec8(u8 val) {
+    // https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7#DEC_r8
+    u8 res = val - 1;
+    zf(res == 0);
+    nf(1);
+    hf(getBitN(res, 4) == getBitN(val, 4));
+    return res;
+  }
+
+  u8 rlc8(u8 val) {
+    u8 res = (val << 1) | (val & 0x80 >> 7);
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(val >> 7);
+    return res;
+  }
+
+  u16 addHL(u16 val) {
+    u16 res = HL() + val;
+    nf(0);
+    hf(); // todo
+    cf(HL() > 0xffff - val);
+    return res;
+  }
+
+  u8 add8(u8 v1, u8 v2) {
+    u16 res = v1 + v2;
+    zf(res == 0);
+    nf(0);
+    hf((v1 & 0xf + v2 & 0xf) > 0xf);
+    cf(res > 0xff);
+    return res;
+  }
+
+  u8 adc8(u8 v1, u8 v2) {
+    u16 res = v1 + v2 + cf();
+    zf(res == 0);
+    nf(0);
+    hf((v1 & 0xf) + (v2 & 0xf) > 0xf);
+    cf(res > 0xff);
+    return res;
+  }
+
+  u8 sub8(u8 v1, u8 v2) {
+    u8 res = v1 - v2;
+    nf(1);
+    hf((v1 & 0xf) + (v2 & 0xf) > 0xf);
+    cf(v2 > v1);
+    return res;
+  }
+
+  u8 sbc8(u8 v1, u8 v2) {
+    u8 res = v1 - v2 - cf();
+    zf(res == 0);
+    nf(1);
+    hf((v1 & 0xf) < (v2 & 0xf) + cf());
+    cf(v2 > v1 - cf());
+    return res;
+  }
+
+  u8 and8(u8 v1, u8 v2) {
+    u8 res = v1 & v2;
+    zf(res == 0);
+    nf(0);
+    hf(1);
+    cf(0);
+    return res;
+  }
+
+  u8 xor8(u8 v1, u8 v2) {
+    u8 res = v1 ^ v2;
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(0);
+    return res;
+  }
+
+  u8 or8(u8 v1, u8 v2) {
+    u8 res = v1 | v2;
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(0);
+    return res;
+  }
+
+  u8 cp8(u8 v1, u8 v2) {
+    u8 res = sub8(v1, v2);
+    zf(res == 0);
+    return res;
+  }
+
+  void jr(u8 val) {
+    i8 v = val;
+    PC(v + PC());
+  }
+
+  void push16(u16 val) {}
+
+  u16 pop16() {}
+
+private:
+  template<typename T>
+  inline static T clearBitN(T val, int n) {
+    return val & ~(1 << (n));
+  }
+
+  template<typename T>
+  inline static T getBitN(T val, int n) {
+    return val >> n & 1;
+  }
+
+private:
+  u16 af_{}, bc_{}, de_{}, hl_{};
+  u16 pc_{}, sp_{};
+  bool halt_;
+
+  MemoryAccessor *memory{};
+};
+
+} // namespace gb
