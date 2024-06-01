@@ -5,6 +5,22 @@
 
 namespace gb {
 
+class InteruptRegister : public Memory<1, 0xffff, 0xffff> {
+public:
+  enum Type {
+    kVBLANK = 0,
+    kLCD    = 1,
+    kTIMER  = 2,
+    kSERIAL = 3,
+    kJOYPAD = 4,
+  };
+
+  void set(u16 addr, u8 interupt_type) {
+    GB_ASSERT(addr >= 0xffff && addr <= 0xffff);
+    ram_[0] = clearBitN(ram_[0], interupt_type) | (1 << interupt_type);
+  }
+};
+
 class CPU {
 public:
   u64 update() {}
@@ -144,6 +160,15 @@ public:
     return res;
   }
 
+  u8 add8(u8 v1, i8 v2) {
+    u16 res = v1 + v2;
+    zf(res == 0);
+    nf(0);
+    hf((v1 & 0xf + v2 & 0xf) > 0xf);
+    cf(res > 0xff);
+    return res;
+  }
+
   u8 adc8(u8 v1, u8 v2) {
     u16 res = v1 + v2 + cf();
     zf(res == 0);
@@ -208,19 +233,15 @@ public:
     PC(v + PC());
   }
 
-  void push16(u16 val) {}
-
-  u16 pop16() {}
-
-private:
-  template<typename T>
-  inline static T clearBitN(T val, int n) {
-    return val & ~(1 << (n));
+  void push16(u16 val) {
+    set(--sp_, val >> 8);
+    set(--sp_, val & 0xff);
   }
 
-  template<typename T>
-  inline static T getBitN(T val, int n) {
-    return val >> n & 1;
+  u16 pop16() {
+    u16 res = get(sp_++);
+    res |= get(sp_++) << 8;
+    return res;
   }
 
 private:

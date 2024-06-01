@@ -74,6 +74,8 @@ struct Instruction {
 #define or8(...) cpu->or8(__VA_ARGS__)
 #define cp8(...) cpu->cp8(__VA_ARGS__)
 #define jr(...) cpu->jr(__VA_ARGS__)
+#define push16(...) cpu->push16(__VA_ARGS__)
+#define pop16(...) cpu->pop16(__VA_ARGS__)
 
 /*
 let unprefixed = json["unprefixed"]
@@ -906,133 +908,290 @@ A(or8(A(), A()));
 DEF_INST_END
 
 DEF_INST(RET_NZ_x_x_x_x, 0xC0, 1, 20)
+if (!zf()) {
+  PC(pop16());
+}
 DEF_INST_END
 
 DEF_INST(POP_BC_x_x_x_x, 0xC1, 1, 12)
+BC(pop16());
 DEF_INST_END
+
 DEF_INST(JP_NZ_a16_x_x_x_x, 0xC2, 3, 16)
+if (!zf()) {
+  PC(imm16());
+}
 DEF_INST_END
+
 DEF_INST(JP_a16_x_x_x_x, 0xC3, 3, 16)
+PC(imm16());
 DEF_INST_END
+
 DEF_INST(CALL_NZ_a16_x_x_x_x, 0xC4, 3, 24)
+u16 target = imm16();
+if (!zf()) {
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(PUSH_BC_x_x_x_x, 0xC5, 1, 16)
+push16(BC());
 DEF_INST_END
+
 DEF_INST(ADD_A_n8_Z_0_H_C, 0xC6, 2, 8)
+A(add8(A(), imm8()));
 DEF_INST_END
+
 DEF_INST(RST_0x00_x_x_x_x, 0xC7, 1, 16)
+push16(PC());
+PC(0x00);
 DEF_INST_END
+
 DEF_INST(RET_Z_x_x_x_x, 0xC8, 1, 20)
+if (zf()) {
+  PC(pop16());
+}
 DEF_INST_END
+
 DEF_INST(RET_x_x_x_x, 0xC9, 1, 16)
+PC(pop16());
 DEF_INST_END
+
 DEF_INST(JP_Z_a16_x_x_x_x, 0xCA, 3, 16)
+u16 target = imm16();
+if (zf()) {
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(PREFIX_x_x_x_x, 0xCB, 1, 4)
+// extend instructions
 DEF_INST_END
+
 DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 24)
+u16 target = imm16();
+if (zf()) {
+  push16(PC());
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(CALL_a16_x_x_x_x, 0xCD, 3, 24)
+u16 target = imm16();
+push16(PC());
+PC(target);
 DEF_INST_END
+
 DEF_INST(ADC_A_n8_Z_0_H_C, 0xCE, 2, 8)
+A(adc8(A(), imm8()));
 DEF_INST_END
+
 DEF_INST(RST_0x08_x_x_x_x, 0xCF, 1, 16)
+push16(PC());
+PC(0x08);
 DEF_INST_END
+
 DEF_INST(RET_NC_x_x_x_x, 0xD0, 1, 20)
+u16 target = imm16();
+if (!cf()) {
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(POP_DE_x_x_x_x, 0xD1, 1, 12)
+DE(pop16());
 DEF_INST_END
+
 DEF_INST(JP_NC_a16_x_x_x_x, 0xD2, 3, 16)
+u16 target = imm16();
+if (!cf()) {
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(ILLEGAL_D3_x_x_x_x, 0xD3, 1, 4)
 DEF_INST_END
+
 DEF_INST(CALL_NC_a16_x_x_x_x, 0xD4, 3, 24)
+u16 target = imm16();
+if (!cf()) {
+  push16(PC());
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(PUSH_DE_x_x_x_x, 0xD5, 1, 16)
+push16(DE());
 DEF_INST_END
+
 DEF_INST(SUB_A_n8_Z_1_H_C, 0xD6, 2, 8)
+A(sub8(A(), imm8()));
 DEF_INST_END
+
 DEF_INST(RST_0x10_x_x_x_x, 0xD7, 1, 16)
+push16(PC());
+PC(0x10);
 DEF_INST_END
+
 DEF_INST(RET_C_x_x_x_x, 0xD8, 1, 20)
+u16 target = imm16();
+if (cf()) {
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(RETI_x_x_x_x, 0xD9, 1, 16)
+// todo
 DEF_INST_END
+
 DEF_INST(JP_C_a16_x_x_x_x, 0xDA, 3, 16)
+u16 target = imm16();
+if (cf()) {
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(ILLEGAL_DB_x_x_x_x, 0xDB, 1, 4)
 DEF_INST_END
+
 DEF_INST(CALL_C_a16_x_x_x_x, 0xDC, 3, 24)
+u16 target = imm16();
+if (cf()) {
+  PC(target);
+}
 DEF_INST_END
+
 DEF_INST(ILLEGAL_DD_x_x_x_x, 0xDD, 1, 4)
 DEF_INST_END
+
 DEF_INST(SBC_A_n8_Z_1_H_C, 0xDE, 2, 8)
+A(sbc8(A(), imm8()));
 DEF_INST_END
+
 DEF_INST(RST_0x18_x_x_x_x, 0xDF, 1, 16)
+push16(PC());
+PC(0x18);
 DEF_INST_END
+
 DEF_INST(LDH_xa8x_A_x_x_x_x, 0xE0, 2, 12)
+set(OFFSET + imm8(), A());
 DEF_INST_END
+
 DEF_INST(POP_HL_x_x_x_x, 0xE1, 1, 12)
+HL(pop16());
 DEF_INST_END
+
 DEF_INST(LD_xCx_A_x_x_x_x, 0xE2, 1, 8)
+set(OFFSET + imm8(), A());
 DEF_INST_END
+
 DEF_INST(ILLEGAL_E3_x_x_x_x, 0xE3, 1, 4)
 DEF_INST_END
 DEF_INST(ILLEGAL_E4_x_x_x_x, 0xE4, 1, 4)
 DEF_INST_END
+
 DEF_INST(PUSH_HL_x_x_x_x, 0xE5, 1, 16)
+push16(HL());
 DEF_INST_END
+
 DEF_INST(AND_A_n8_Z_0_1_0, 0xE6, 2, 8)
+A(and8(A(), imm8()));
 DEF_INST_END
+
 DEF_INST(RST_0x20_x_x_x_x, 0xE7, 1, 16)
+push16(PC());
+PC(0x20);
 DEF_INST_END
+
 DEF_INST(ADD_SP_e8_0_0_H_C, 0xE8, 2, 16)
+SP(add8(SP(), (i8) imm8()));
 DEF_INST_END
+
 DEF_INST(JP_HL_x_x_x_x, 0xE9, 1, 4)
+PC(HL());
 DEF_INST_END
+
 DEF_INST(LD_xa16x_A_x_x_x_x, 0xEA, 3, 16)
+set(get(imm16()), A());
 DEF_INST_END
+
 DEF_INST(ILLEGAL_EB_x_x_x_x, 0xEB, 1, 4)
 DEF_INST_END
 DEF_INST(ILLEGAL_EC_x_x_x_x, 0xEC, 1, 4)
 DEF_INST_END
 DEF_INST(ILLEGAL_ED_x_x_x_x, 0xED, 1, 4)
 DEF_INST_END
+
 DEF_INST(XOR_A_n8_Z_0_0_0, 0xEE, 2, 8)
+A(xor8(A(), imm8()));
 DEF_INST_END
+
 DEF_INST(RST_0x28_x_x_x_x, 0xEF, 1, 16)
+push16(PC());
+PC(0x28);
 DEF_INST_END
+
 DEF_INST(LDH_A_xa8x_x_x_x_x, 0xF0, 2, 12)
+A(get(OFFSET + imm8()));
 DEF_INST_END
+
 DEF_INST(POP_AF_Z_N_H_C, 0xF1, 1, 12)
+AF(pop16());
 DEF_INST_END
+
 DEF_INST(LD_A_xCx_x_x_x_x, 0xF2, 1, 8)
+A(get(OFFSET + C()));
 DEF_INST_END
+
 DEF_INST(DI_x_x_x_x, 0xF3, 1, 4)
+// todo
 DEF_INST_END
+
 DEF_INST(ILLEGAL_F4_x_x_x_x, 0xF4, 1, 4)
 DEF_INST_END
+
 DEF_INST(PUSH_AF_x_x_x_x, 0xF5, 1, 16)
+push16(AF());
 DEF_INST_END
+
 DEF_INST(OR_A_n8_Z_0_0_0, 0xF6, 2, 8)
+A(or8(A(), imm8()));
 DEF_INST_END
+
 DEF_INST(RST_0x30_x_x_x_x, 0xF7, 1, 16)
+push16(PC());
+PC(0x30);
 DEF_INST_END
+
 DEF_INST(LD_HL_SP_e8_0_0_H_C, 0xF8, 2, 12)
+SP(add8(SP(), imm8()));
+HL(SP());
 DEF_INST_END
+
 DEF_INST(LD_SP_HL_x_x_x_x, 0xF9, 1, 8)
+SP(HL());
 DEF_INST_END
+
 DEF_INST(LD_A_xa16x_x_x_x_x, 0xFA, 3, 16)
+A(get(imm16()));
 DEF_INST_END
+
 DEF_INST(EI_x_x_x_x, 0xFB, 1, 4)
+// todo
 DEF_INST_END
+
 DEF_INST(ILLEGAL_FC_x_x_x_x, 0xFC, 1, 4)
 DEF_INST_END
 DEF_INST(ILLEGAL_FD_x_x_x_x, 0xFD, 1, 4)
 DEF_INST_END
+
 DEF_INST(CP_A_n8_Z_1_H_C, 0xFE, 2, 8)
+A(cp8(A(), imm8()));
 DEF_INST_END
+
 DEF_INST(RST_0x38_x_x_x_x, 0xFF, 1, 16)
+push16(PC());
+PC(0x38);
 DEF_INST_END
 
 
