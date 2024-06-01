@@ -5,7 +5,7 @@
 
 namespace gb {
 
-class InteruptRegister : public Memory<1, 0xffff, 0xffff> {
+class InteruptRegister : public Memory<0xffff, 0xffff> {
 public:
   enum Type {
     kVBLANK = 0,
@@ -15,9 +15,9 @@ public:
     kJOYPAD = 4,
   };
 
-  void set(u16 addr, u8 interupt_type) {
+  void set(u16 addr, u8 interrupt_type) {
     GB_ASSERT(addr >= 0xffff && addr <= 0xffff);
-    ram_[0] = clearBitN(ram_[0], interupt_type) | (1 << interupt_type);
+    ram_[0] = clearBitN(ram_[0], interrupt_type) | (1 << interrupt_type);
   }
 };
 
