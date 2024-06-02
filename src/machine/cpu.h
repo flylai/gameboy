@@ -1,25 +1,10 @@
 #pragma once
 
 #include "common/type.h"
+#include "interrupt.h"
 #include "memory_accessor.h"
 
 namespace gb {
-
-class InteruptRegister : public Memory<0xffff, 0xffff> {
-public:
-  enum Type {
-    kVBLANK = 0,
-    kLCD    = 1,
-    kTIMER  = 2,
-    kSERIAL = 3,
-    kJOYPAD = 4,
-  };
-
-  void set(u16 addr, u8 interrupt_type) {
-    GB_ASSERT(addr >= 0xffff && addr <= 0xffff);
-    ram_[0] = clearBitN(ram_[0], interrupt_type) | (1 << interrupt_type);
-  }
-};
 
 class CPU {
 public:
@@ -101,6 +86,10 @@ public:
 
   void halt(bool val) { halt_ = val; }
 
+  bool interrupt() const { return interrupt_; }
+
+  void interrupt(bool val) { interrupt_ = val; }
+
   u8 imm8() {
     auto ret = memory->get(pc_++);
     return ret;
@@ -146,7 +135,7 @@ public:
   u16 addHL(u16 val) {
     u16 res = HL() + val;
     nf(0);
-    hf(); // todo
+    hf((HL() & 0xfff) + (val & 0xfff) > 0xfff);
     cf(HL() > 0xffff - val);
     return res;
   }
@@ -248,6 +237,7 @@ private:
   u16 af_{}, bc_{}, de_{}, hl_{};
   u16 pc_{}, sp_{};
   bool halt_;
+  bool interrupt_{};
 
   MemoryAccessor *memory{};
 };

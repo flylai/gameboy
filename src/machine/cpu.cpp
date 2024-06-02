@@ -76,6 +76,7 @@ struct Instruction {
 #define jr(...) cpu->jr(__VA_ARGS__)
 #define push16(...) cpu->push16(__VA_ARGS__)
 #define pop16(...) cpu->pop16(__VA_ARGS__)
+#define interrupt(...) cpu->interrupt(__VA_ARGS__)
 
 /*
 let unprefixed = json["unprefixed"]
@@ -137,12 +138,7 @@ set(imm16(), SP());
 DEF_INST_END
 
 DEF_INST(ADD_HL_BC_x_0_H_C, 0x09, 1, 8)
-u16 val = imm16();
-u16 res = HL() + val;
-nf(0);
-hf(); // todo
-cf(HL() > 0xffff - val);
-HL(res);
+HL(addHL(BC()));
 DEF_INST_END
 
 DEF_INST(LD_A_xBCx_x_x_x_x, 0x0A, 1, 8)
@@ -611,7 +607,6 @@ set(HL(), L());
 DEF_INST_END
 
 DEF_INST(HALT_x_x_x_x, 0x76, 1, 4)
-// todo
 halt(true);
 DEF_INST_END
 
@@ -1144,7 +1139,7 @@ A(get(OFFSET + C()));
 DEF_INST_END
 
 DEF_INST(DI_x_x_x_x, 0xF3, 1, 4)
-// todo
+interrupt(0);
 DEF_INST_END
 
 DEF_INST(ILLEGAL_F4_x_x_x_x, 0xF4, 1, 4)
@@ -1177,7 +1172,7 @@ A(get(imm16()));
 DEF_INST_END
 
 DEF_INST(EI_x_x_x_x, 0xFB, 1, 4)
-// todo
+interrupt(1);
 DEF_INST_END
 
 DEF_INST(ILLEGAL_FC_x_x_x_x, 0xFC, 1, 4)
