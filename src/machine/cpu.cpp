@@ -7,20 +7,16 @@
 namespace gb {
 
 // https://gbdev.io/gb-opcodes//optables/
+// https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7
 
 struct Instruction {
   static constexpr u16 OFFSET = 0xff00;
 
-  Instruction(const std::string &name, u8 op, u8 bytes, u8 cycle)
-      : name(name),
-        op(op),
-        bytes(bytes),
-        cycle(cycle) {}
+  Instruction(const std::string &name, u8 op, u8 bytes) : name(name), op(op), bytes(bytes) {}
 
   const std::string name;
   const u8 op{};
   const u8 bytes{};
-  const u8 cycle{};
 
   void RUN(CPU *cpu) {}
 };
@@ -28,9 +24,11 @@ struct Instruction {
 #define DEF_INST(NAME, OP, BYTES, CYCLE) \
   struct _##OP : Instruction {           \
     using Instruction::Instruction;      \
-    void RUN(CPU *cpu) {
+    u8 RUN(CPU *cpu) {                   \
+      u8 cycle = (CYCLE);
 
 #define DEF_INST_END \
+  return cycle;      \
   }                  \
   }                  \
   ;
@@ -97,7 +95,7 @@ for (let op in unprefixed) {
   str += "_" + (flags['N'] == '-' ? "x" : flags['N']);
   str += "_" + (flags['H'] == '-' ? "x" : flags['H']);
   str += "_" + (flags['C'] == '-' ? "x" : flags['C']);
-
+  str += "," + op + "," + obj["bytes"] + "," + obj["cycles"].at(-1);
   console.log(str)
 }
 */
@@ -240,9 +238,10 @@ A((A() >> 1) | (c << 7));
 cf(c);
 DEF_INST_END
 
-DEF_INST(JR_NZ_e8_x_x_x_x, 0x20, 2, 12)
+DEF_INST(JR_NZ_e8_x_x_x_x, 0x20, 2, 8)
 if (!zf()) {
   jr(imm8());
+  cycle = 12;
 }
 DEF_INST_END
 
@@ -275,9 +274,10 @@ DEF_INST(DAA_Z_x_0_C, 0x27, 1, 4)
 // todo
 DEF_INST_END
 
-DEF_INST(JR_Z_e8_x_x_x_x, 0x28, 2, 12)
+DEF_INST(JR_Z_e8_x_x_x_x, 0x28, 2, 8)
 if (zf()) {
   jr(imm8());
+  cycle = 12;
 }
 DEF_INST_END
 
@@ -312,9 +312,10 @@ hf(1);
 A(~A());
 DEF_INST_END
 
-DEF_INST(JR_NC_e8_x_x_x_x, 0x30, 2, 12)
+DEF_INST(JR_NC_e8_x_x_x_x, 0x30, 2, 8)
 if (!cf()) {
   jr(imm8());
+  cycle = 12;
 }
 DEF_INST_END
 
@@ -349,9 +350,10 @@ hf(0);
 cf(1);
 DEF_INST_END
 
-DEF_INST(JR_C_e8_x_x_x_x, 0x38, 2, 12)
+DEF_INST(JR_C_e8_x_x_x_x, 0x38, 2, 8)
 if (cf()) {
   jr(imm8());
+  cycle = 12;
 }
 DEF_INST_END
 
@@ -902,9 +904,10 @@ DEF_INST(CP_A_A_1_1_0_0, 0xBF, 1, 4)
 A(or8(A(), A()));
 DEF_INST_END
 
-DEF_INST(RET_NZ_x_x_x_x, 0xC0, 1, 20)
+DEF_INST(RET_NZ_x_x_x_x, 0xC0, 1, 8)
 if (!zf()) {
   PC(pop16());
+  cycle = 20;
 }
 DEF_INST_END
 
@@ -912,9 +915,10 @@ DEF_INST(POP_BC_x_x_x_x, 0xC1, 1, 12)
 BC(pop16());
 DEF_INST_END
 
-DEF_INST(JP_NZ_a16_x_x_x_x, 0xC2, 3, 16)
+DEF_INST(JP_NZ_a16_x_x_x_x, 0xC2, 3, 12)
 if (!zf()) {
   PC(imm16());
+  cycle = 16;
 }
 DEF_INST_END
 
@@ -922,10 +926,11 @@ DEF_INST(JP_a16_x_x_x_x, 0xC3, 3, 16)
 PC(imm16());
 DEF_INST_END
 
-DEF_INST(CALL_NZ_a16_x_x_x_x, 0xC4, 3, 24)
+DEF_INST(CALL_NZ_a16_x_x_x_x, 0xC4, 3, 12)
 u16 target = imm16();
 if (!zf()) {
   PC(target);
+  cycle = 24;
 }
 DEF_INST_END
 
@@ -942,9 +947,10 @@ push16(PC());
 PC(0x00);
 DEF_INST_END
 
-DEF_INST(RET_Z_x_x_x_x, 0xC8, 1, 20)
+DEF_INST(RET_Z_x_x_x_x, 0xC8, 1, 8)
 if (zf()) {
   PC(pop16());
+  cycle = 20;
 }
 DEF_INST_END
 
@@ -952,10 +958,11 @@ DEF_INST(RET_x_x_x_x, 0xC9, 1, 16)
 PC(pop16());
 DEF_INST_END
 
-DEF_INST(JP_Z_a16_x_x_x_x, 0xCA, 3, 16)
+DEF_INST(JP_Z_a16_x_x_x_x, 0xCA, 3, 12)
 u16 target = imm16();
 if (zf()) {
   PC(target);
+  cycle = 16;
 }
 DEF_INST_END
 
@@ -963,11 +970,12 @@ DEF_INST(PREFIX_x_x_x_x, 0xCB, 1, 4)
 // extend instructions
 DEF_INST_END
 
-DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 24)
+DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 12)
 u16 target = imm16();
 if (zf()) {
   push16(PC());
   PC(target);
+  cycle = 24;
 }
 DEF_INST_END
 
@@ -986,10 +994,11 @@ push16(PC());
 PC(0x08);
 DEF_INST_END
 
-DEF_INST(RET_NC_x_x_x_x, 0xD0, 1, 20)
+DEF_INST(RET_NC_x_x_x_x, 0xD0, 1, 8)
 u16 target = imm16();
 if (!cf()) {
   PC(target);
+  cycle = 20;
 }
 DEF_INST_END
 
@@ -997,21 +1006,23 @@ DEF_INST(POP_DE_x_x_x_x, 0xD1, 1, 12)
 DE(pop16());
 DEF_INST_END
 
-DEF_INST(JP_NC_a16_x_x_x_x, 0xD2, 3, 16)
+DEF_INST(JP_NC_a16_x_x_x_x, 0xD2, 3, 12)
 u16 target = imm16();
 if (!cf()) {
   PC(target);
+  cycle = 16;
 }
 DEF_INST_END
 
 DEF_INST(ILLEGAL_D3_x_x_x_x, 0xD3, 1, 4)
 DEF_INST_END
 
-DEF_INST(CALL_NC_a16_x_x_x_x, 0xD4, 3, 24)
+DEF_INST(CALL_NC_a16_x_x_x_x, 0xD4, 3, 12)
 u16 target = imm16();
 if (!cf()) {
   push16(PC());
   PC(target);
+  cycle = 24;
 }
 DEF_INST_END
 
@@ -1028,10 +1039,11 @@ push16(PC());
 PC(0x10);
 DEF_INST_END
 
-DEF_INST(RET_C_x_x_x_x, 0xD8, 1, 20)
+DEF_INST(RET_C_x_x_x_x, 0xD8, 1, 8)
 u16 target = imm16();
 if (cf()) {
   PC(target);
+  cycle = 20;
 }
 DEF_INST_END
 
@@ -1039,20 +1051,22 @@ DEF_INST(RETI_x_x_x_x, 0xD9, 1, 16)
 // todo
 DEF_INST_END
 
-DEF_INST(JP_C_a16_x_x_x_x, 0xDA, 3, 16)
+DEF_INST(JP_C_a16_x_x_x_x, 0xDA, 3, 12)
 u16 target = imm16();
 if (cf()) {
   PC(target);
+  cycle = 16;
 }
 DEF_INST_END
 
 DEF_INST(ILLEGAL_DB_x_x_x_x, 0xDB, 1, 4)
 DEF_INST_END
 
-DEF_INST(CALL_C_a16_x_x_x_x, 0xDC, 3, 24)
+DEF_INST(CALL_C_a16_x_x_x_x, 0xDC, 3, 12)
 u16 target = imm16();
 if (cf()) {
   PC(target);
+  cycle = 24;
 }
 DEF_INST_END
 
