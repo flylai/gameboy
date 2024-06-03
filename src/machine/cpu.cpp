@@ -75,6 +75,16 @@ struct Instruction {
 #define push16(...) cpu->push16(__VA_ARGS__)
 #define pop16(...) cpu->pop16(__VA_ARGS__)
 #define interrupt(...) cpu->interrupt(__VA_ARGS__)
+#define rrc8(...) cpu->rrc8(__VA_ARGS__)
+#define rl8(...) cpu->rl8(__VA_ARGS__)
+#define rr8(...) cpu->rr8(__VA_ARGS__)
+#define sla8(...) cpu->sla8(__VA_ARGS__)
+#define sra8(...) cpu->sra8(__VA_ARGS__)
+#define swap8(...) cpu->swap8(__VA_ARGS__)
+#define srl8(...) cpu->srl8(__VA_ARGS__)
+#define bit8(...) cpu->bit8(__VA_ARGS__)
+#define res8(...) cpu->res8(__VA_ARGS__)
+#define set8(...) cpu->set8(__VA_ARGS__)
 
 /*
 let unprefixed = json["unprefixed"]
@@ -968,6 +978,116 @@ DEF_INST_END
 
 DEF_INST(PREFIX_x_x_x_x, 0xCB, 1, 4)
 // extend instructions
+/*
+eg. RLC B
+00000   000
+  op    reg
+*/
+cycle       = 8;
+u8 inst     = imm8();
+u8 data_bit = inst & 0x7;
+u8 unhandled_data{};
+u8 handled_data{};
+u8 bit_n = inst >> 3 & 0x7; // for set8 res8 bit8
+
+switch (data_bit) {
+  case 0:
+    unhandled_data = B();
+    break;
+  case 1:
+    unhandled_data = C();
+    break;
+  case 2:
+    unhandled_data = D();
+    break;
+  case 3:
+    unhandled_data = E();
+    break;
+  case 4:
+    unhandled_data = H();
+    break;
+  case 5:
+    unhandled_data = L();
+    break;
+  case 6:
+    unhandled_data = get(HL());
+    cycle          = 16;
+    break;
+  case 7:
+    unhandled_data = A();
+    break;
+  default:
+    GB_UNREACHABLE();
+}
+
+switch (op) {
+  case 0x00 ... 0x07:
+    handled_data = rlc8(unhandled_data);
+    break;
+  case 0x08 ... 0x0f:
+    handled_data = rrc8(unhandled_data);
+    break;
+  case 0x10 ... 0x17:
+    handled_data = rl8(unhandled_data);
+    break;
+  case 0x18 ... 0x1f:
+    handled_data = rr8(unhandled_data);
+    break;
+  case 0x20 ... 0x27:
+    handled_data = sla8(unhandled_data);
+    break;
+  case 0x28 ... 0x2f:
+    handled_data = sra8(unhandled_data);
+    break;
+  case 0x30 ... 0x37:
+    handled_data = swap8(unhandled_data);
+    break;
+  case 0x38 ... 0x3f:
+    handled_data = srl8(unhandled_data);
+    break;
+  case 0x40 ... 0x7f:
+    handled_data = bit8(bit_n, unhandled_data);
+    cycle        = 12;
+    break;
+  case 0x80 ... 0xbf:
+    handled_data = res8(bit_n, unhandled_data);
+    break;
+  case 0xc0 ... 0xff:
+    handled_data = set8(bit_n, unhandled_data);
+    break;
+  default:
+    GB_UNREACHABLE();
+}
+
+switch (data_bit) {
+  case 0:
+    B(handled_data);
+    break;
+  case 1:
+    C(handled_data);
+    break;
+  case 2:
+    D(handled_data);
+    break;
+  case 3:
+    E(handled_data);
+    break;
+  case 4:
+    H(handled_data);
+    break;
+  case 5:
+    L(handled_data);
+    break;
+  case 6:
+    set(HL(), handled_data);
+    break;
+  case 7:
+    A(handled_data);
+    break;
+  default:
+    GB_UNREACHABLE();
+}
+
 DEF_INST_END
 
 DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 12)

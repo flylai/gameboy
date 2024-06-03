@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/logger.h"
 #include "common/type.h"
 #include "interrupt.h"
 #include "memory_accessor.h"
@@ -233,11 +234,92 @@ public:
     return res;
   }
 
+  u8 rrc8(u8 val) {
+    u8 res = (val & 0x1 << 7) | (val >> 1);
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(val & 0x1);
+    return res;
+  }
+
+  u8 rl8(u8 val) {
+    u8 res = val << 1 | cf();
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(val & 0x80);
+    return res;
+  }
+
+  u8 rr8(u8 val) {
+    u8 res = (val >> 1) | (cf() << 7);
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(val & 0x1);
+    return res;
+  }
+
+  u8 sla8(u8 val) {
+    u8 res = val << 1;
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(val & 0x80);
+    return res;
+  }
+
+  u8 sra8(u8 val) {
+    u8 res = val;
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(val & 0x01);
+    return res;
+  }
+
+  u8 swap8(u8 val) {
+    u8 res = (val >> 4) | (val << 4);
+    zf(0);
+    nf(0);
+    hf(0);
+    cf(0);
+    return res;
+  }
+
+  u8 srl8(u8 val) {
+    u8 res = val >> 1;
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    cf(val & 0x01);
+    return res;
+  }
+
+  u8 bit8(u8 n, u8 val) {
+    u8 res = getBitN(val, n);
+    zf(res == 0);
+    nf(0);
+    hf(0);
+    return res;
+  }
+
+  u8 res8(u8 n, u8 val) {
+    u8 res = clearBitN(val, n);
+    return res;
+  }
+
+  u8 set8(u8 n, u8 val) {
+    u8 res = setBitN(val, n);
+    return res;
+  }
+
 private:
   u16 af_{}, bc_{}, de_{}, hl_{};
   u16 pc_{}, sp_{};
   bool halt_;
-  bool interrupt_{};
+  bool interrupt_status_{};
 
   MemoryAccessor *memory{};
 };
