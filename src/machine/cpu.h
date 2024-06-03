@@ -4,6 +4,7 @@
 #include "common/type.h"
 #include "interrupt.h"
 #include "memory_accessor.h"
+#include "memory_bus.h"
 
 namespace gb {
 
@@ -87,9 +88,9 @@ public:
 
   void halt(bool val) { halt_ = val; }
 
-  bool interrupt() const { return interrupt_; }
+  bool interrupt() const { return interrupt_status_; }
 
-  void interrupt(bool val) { interrupt_ = val; }
+  void interrupt(bool val) { interrupt_status_ = val; }
 
   u8 imm8() {
     auto ret = memory->get(pc_++);
