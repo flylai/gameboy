@@ -20,10 +20,10 @@ public:
     Memory<LO, HI>::ram_[0] = clearBitN(Memory<LO, HI>::ram_[0], interrupt_type) | (1 << interrupt_type);
   }
 
-  u8 get(u16 addr) override { return Memory<LO, HI>::ram_[0]; }
+  u8 get(u16 addr) const override { return Memory<LO, HI>::ram_[0]; }
 };
 
-class InterruptRegister : public Interrupt<0xffff, 0xffff> {};
+class InterruptEnable : public Interrupt<0xffff, 0xffff> {};
 
 class InterruptFlag : public Interrupt<0xff0f, 0xff0f> {};
 

@@ -319,7 +319,7 @@ public:
 private:
   u16 af_{}, bc_{}, de_{}, hl_{};
   u16 pc_{}, sp_{};
-  bool halt_;
+  bool halt_{};
   bool interrupt_status_{};
 
   MemoryAccessor *memory{};
