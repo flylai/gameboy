@@ -1,5 +1,5 @@
 #include "common/logger.h"
-#include "memory_accessor.h"
+#include "machine/memory/memory_accessor.h"
 
 namespace gb {
 
