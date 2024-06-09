@@ -281,7 +281,28 @@ H(imm8());
 DEF_INST_END
 
 DEF_INST(DAA_Z_x_0_C, 0x27, 1, 4)
-// todo
+if (nf()) {
+  if (hf()) {
+    A(A() + 0xfa);
+  }
+  if (cf()) {
+    A(A() + 0xa0);
+  }
+} else {
+  u8 a = A();
+  if ((A() & 0xf) > 0x9 || hf()) {
+    a += 0x6;
+  }
+  if ((a & 0x1f0) > 0x90 || cf()) {
+    a += 0x60;
+    cf(1);
+  } else {
+    cf(0);
+  }
+  A(a);
+}
+hf(0);
+zf(A() == 0x0);
 DEF_INST_END
 
 DEF_INST(JR_Z_e8_x_x_x_x, 0x28, 2, 8)
@@ -1168,7 +1189,8 @@ if (cf()) {
 DEF_INST_END
 
 DEF_INST(RETI_x_x_x_x, 0xD9, 1, 16)
-// todo
+interrupt(1);
+PC(pop16());
 DEF_INST_END
 
 DEF_INST(JP_C_a16_x_x_x_x, 0xDA, 3, 12)
