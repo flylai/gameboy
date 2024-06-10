@@ -3,14 +3,18 @@
 #include "common/logger.h"
 #include "common/type.h"
 #include "interrupt.h"
-#include "memory_accessor.h"
-#include "memory_bus.h"
+#include "machine/memory/memory_accessor.h"
+#include "machine/memory/memory_bus.h"
+#include "machine/ppu/ppu.h"
 
 namespace gb {
 
 class CPU {
 public:
-  u64 update() {}
+  CPU() {}
+
+  u8 update();
+  u8 handleInterrupt();
 
   u8 A() const { return af_ >> 8; }
 
@@ -88,24 +92,24 @@ public:
 
   void halt(bool val) { halt_ = val; }
 
-  bool interrupt() const { return interrupt_status_; }
+  bool IME() const { return ime_; }
 
-  void interrupt(bool val) { interrupt_status_ = val; }
+  void IME(bool val) { ime_ = val; }
 
   u8 imm8() {
-    auto ret = memory->get(pc_++);
+    auto ret = memory_bus->get(pc_++);
     return ret;
   }
 
   u16 imm16() {
-    u8 l  = memory->get(pc_++);
-    u16 h = memory->get(pc_++);
+    u8 l  = memory_bus->get(pc_++);
+    u16 h = memory_bus->get(pc_++);
     return (h << 8) & l;
   }
 
-  void set(u16 addr, u8 val) { memory->set(addr, val); }
+  void set(u16 addr, u8 val) { memory_bus->set(addr, val); }
 
-  u8 get(u16 addr) const { return memory->get(addr); }
+  u8 get(u16 addr) const { return memory_bus->get(addr); }
 
   u8 inc8(u8 val) {
     // https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7#INC_r8
@@ -320,9 +324,12 @@ private:
   u16 af_{}, bc_{}, de_{}, hl_{};
   u16 pc_{}, sp_{};
   bool halt_{};
-  bool interrupt_status_{};
+  bool ime_{};
 
-  MemoryAccessor *memory{};
+  MemoryBus *memory_bus{};
+  // https://gbdev.io/pandocs/Interrupts.html
+  InterruptEnable ie_;
+  InterruptFlag if_;
 };
 
 } // namespace gb
