@@ -8,9 +8,9 @@
 
 namespace gb {
 
-class Timer {
+class RTC {
 public:
-  using TimerTask = std::function<void(i64)>;
+  using TimerTask = std::function<void(u64)>;
 
   u32 addTask(const TimerTask &task) {
     tasks_[task_idx_] = task;
@@ -29,9 +29,10 @@ public:
       auto diff   = now_ns - last_update_;
       if (diff >= SEQ) {
         for (const auto &[idx, task]: tasks_) {
-          task(now_ns);
+          task(cycle_);
         }
         last_update_ = now_ns;
+        cycle_++;
       }
       std::this_thread::sleep_for(std::chrono::duration<u64, std::nano>(static_cast<u64>(SEQ)));
     }
@@ -44,6 +45,7 @@ private:
   u32 task_idx_{};
   std::unordered_map<u32, TimerTask> tasks_;
   i64 last_update_{};
+  u16 cycle_{};
   bool stop_{true};
 };
 
