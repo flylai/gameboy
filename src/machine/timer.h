@@ -7,6 +7,15 @@
 namespace gb {
 class Timer : public Memory<0xff04, 0xff07> {
 public:
+  Timer() { reset(); }
+
+  void reset() {
+    _DIV(0x18);
+    _TIMA(0x00);
+    TMA(0);
+    TAC(0xf8);
+  }
+
   u8 update(u64 cycle) {
     constexpr u8 tac_clock_table[] = {0xff, 0x4, 0xf, 0x40};
     u8 selected_clock              = TAC() & 0x3;

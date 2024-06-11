@@ -11,7 +11,22 @@ namespace gb {
 
 class CPU {
 public:
-  CPU() {}
+  CPU() { reset(); }
+
+  void reset() {
+    A(0x01);
+    F(0);
+    B(0xff);
+    C(0x13);
+    D(0);
+    E(0xc1);
+    H(0x84);
+    L(0x03);
+    PC(0x100);
+    SP(0xfffe);
+    if_.set(0xff0f, 0xe1);
+    ie_.set(0xffff, 0);
+  }
 
   u8 update();
   u8 handleInterrupt();

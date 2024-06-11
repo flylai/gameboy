@@ -1,7 +1,7 @@
 #pragma once
 
 #include "common/type.h"
-#include "memory_accessor.h"
+#include "machine/memory/memory_accessor.h"
 
 namespace gb {
 
