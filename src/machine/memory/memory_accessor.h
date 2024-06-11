@@ -28,11 +28,4 @@ protected:
   u8 ram_[HI - LO + 1]{};
 };
 
-static constexpr u16 WORK_RAM_SIZE  = 8 * 1024;
-static constexpr u16 VIDEO_RAM_SIZE = 8 * 1024;
-
-class WorkRam : public Memory<0xc000, 0xdfff> {};
-
-class VideoRam : public Memory<0x8000, 0x9fff> {};
-
 } // namespace gb
