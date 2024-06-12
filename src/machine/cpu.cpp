@@ -1,5 +1,6 @@
 #include "cpu.h"
 
+#include <memory>
 #include <string>
 
 #include "common/type.h"
@@ -21,8 +22,8 @@ struct Instruction {
   const u8 op{};
   const u8 bytes{};
 
-  inline u8 update(CPU *cpu) const {
-    GB_LOG(ERROR) << "Instruction " << std::hex << op << " is not implement";
+  virtual u8 update(CPU *cpu) const {
+    GB_LOG(ERROR) << "Instruction 0x" << std::hex << (int) op << " is not implement";
     return 0;
   }
 };
@@ -31,6 +32,7 @@ struct Instruction {
   struct _##OP : Instruction {                           \
     constexpr _##OP() : Instruction(#NAME, OP, BYTES) {} \
     u8 update(CPU *cpu) const {                          \
+      GB_LOG(INFO) << #NAME;                             \
       u8 cycle = (CYCLE);
 
 #define DEF_INST_END \
@@ -1403,37 +1405,99 @@ DEF_INST_END
 #undef res8
 #undef set8
 
-static const Instruction *instruction_table() {
-  static const Instruction table[] = {
-          _0x00(), _0x01(), _0x02(), _0x03(), _0x04(), _0x05(), _0x06(), _0x07(), _0x08(), _0x09(), _0x0A(),
-          _0x0B(), _0x0C(), _0x0D(), _0x0E(), _0x0F(), _0x10(), _0x11(), _0x12(), _0x13(), _0x14(), _0x15(),
-          _0x16(), _0x17(), _0x18(), _0x19(), _0x1A(), _0x1B(), _0x1C(), _0x1D(), _0x1E(), _0x1F(), _0x20(),
-          _0x21(), _0x22(), _0x23(), _0x24(), _0x25(), _0x26(), _0x27(), _0x28(), _0x29(), _0x2A(), _0x2B(),
-          _0x2C(), _0x2D(), _0x2E(), _0x2F(), _0x30(), _0x31(), _0x32(), _0x33(), _0x34(), _0x35(), _0x36(),
-          _0x37(), _0x38(), _0x39(), _0x3A(), _0x3B(), _0x3C(), _0x3D(), _0x3E(), _0x3F(), _0x40(), _0x41(),
-          _0x42(), _0x43(), _0x44(), _0x45(), _0x46(), _0x47(), _0x48(), _0x49(), _0x4A(), _0x4B(), _0x4C(),
-          _0x4D(), _0x4E(), _0x4F(), _0x50(), _0x51(), _0x52(), _0x53(), _0x54(), _0x55(), _0x56(), _0x57(),
-          _0x58(), _0x59(), _0x5A(), _0x5B(), _0x5C(), _0x5D(), _0x5E(), _0x5F(), _0x60(), _0x61(), _0x62(),
-          _0x63(), _0x64(), _0x65(), _0x66(), _0x67(), _0x68(), _0x69(), _0x6A(), _0x6B(), _0x6C(), _0x6D(),
-          _0x6E(), _0x6F(), _0x70(), _0x71(), _0x72(), _0x73(), _0x74(), _0x75(), _0x76(), _0x77(), _0x78(),
-          _0x79(), _0x7A(), _0x7B(), _0x7C(), _0x7D(), _0x7E(), _0x7F(), _0x80(), _0x81(), _0x82(), _0x83(),
-          _0x84(), _0x85(), _0x86(), _0x87(), _0x88(), _0x89(), _0x8A(), _0x8B(), _0x8C(), _0x8D(), _0x8E(),
-          _0x8F(), _0x90(), _0x91(), _0x92(), _0x93(), _0x94(), _0x95(), _0x96(), _0x97(), _0x98(), _0x99(),
-          _0x9A(), _0x9B(), _0x9C(), _0x9D(), _0x9E(), _0x9F(), _0xA0(), _0xA1(), _0xA2(), _0xA3(), _0xA4(),
-          _0xA5(), _0xA6(), _0xA7(), _0xA8(), _0xA9(), _0xAA(), _0xAB(), _0xAC(), _0xAD(), _0xAE(), _0xAF(),
-          _0xB0(), _0xB1(), _0xB2(), _0xB3(), _0xB4(), _0xB5(), _0xB6(), _0xB7(), _0xB8(), _0xB9(), _0xBA(),
-          _0xBB(), _0xBC(), _0xBD(), _0xBE(), _0xBF(), _0xC0(), _0xC1(), _0xC2(), _0xC3(), _0xC4(), _0xC5(),
-          _0xC6(), _0xC7(), _0xC8(), _0xC9(), _0xCA(), _0xCB(), _0xCC(), _0xCD(), _0xCE(), _0xCF(), _0xD0(),
-          _0xD1(), _0xD2(), _0xD3(), _0xD4(), _0xD5(), _0xD6(), _0xD7(), _0xD8(), _0xD9(), _0xDA(), _0xDB(),
-          _0xDC(), _0xDD(), _0xDE(), _0xDF(), _0xE0(), _0xE1(), _0xE2(), _0xE3(), _0xE4(), _0xE5(), _0xE6(),
-          _0xE7(), _0xE8(), _0xE9(), _0xEA(), _0xEB(), _0xEC(), _0xED(), _0xEE(), _0xEF(), _0xF0(), _0xF1(),
-          _0xF2(), _0xF3(), _0xF4(), _0xF5(), _0xF6(), _0xF7(), _0xF8(), _0xF9(), _0xFA(), _0xFB(), _0xFC(),
-          _0xFD(), _0xFE(), _0xFF(),
+static const std::unique_ptr<Instruction> *instruction_table() {
+  static const std::unique_ptr<Instruction> table[] = {
+          std::make_unique<_0x00>(), std::make_unique<_0x01>(), std::make_unique<_0x02>(),
+          std::make_unique<_0x03>(), std::make_unique<_0x04>(), std::make_unique<_0x05>(),
+          std::make_unique<_0x06>(), std::make_unique<_0x07>(), std::make_unique<_0x08>(),
+          std::make_unique<_0x09>(), std::make_unique<_0x0A>(), std::make_unique<_0x0B>(),
+          std::make_unique<_0x0C>(), std::make_unique<_0x0D>(), std::make_unique<_0x0E>(),
+          std::make_unique<_0x0F>(), std::make_unique<_0x10>(), std::make_unique<_0x11>(),
+          std::make_unique<_0x12>(), std::make_unique<_0x13>(), std::make_unique<_0x14>(),
+          std::make_unique<_0x15>(), std::make_unique<_0x16>(), std::make_unique<_0x17>(),
+          std::make_unique<_0x18>(), std::make_unique<_0x19>(), std::make_unique<_0x1A>(),
+          std::make_unique<_0x1B>(), std::make_unique<_0x1C>(), std::make_unique<_0x1D>(),
+          std::make_unique<_0x1E>(), std::make_unique<_0x1F>(), std::make_unique<_0x20>(),
+          std::make_unique<_0x21>(), std::make_unique<_0x22>(), std::make_unique<_0x23>(),
+          std::make_unique<_0x24>(), std::make_unique<_0x25>(), std::make_unique<_0x26>(),
+          std::make_unique<_0x27>(), std::make_unique<_0x28>(), std::make_unique<_0x29>(),
+          std::make_unique<_0x2A>(), std::make_unique<_0x2B>(), std::make_unique<_0x2C>(),
+          std::make_unique<_0x2D>(), std::make_unique<_0x2E>(), std::make_unique<_0x2F>(),
+          std::make_unique<_0x30>(), std::make_unique<_0x31>(), std::make_unique<_0x32>(),
+          std::make_unique<_0x33>(), std::make_unique<_0x34>(), std::make_unique<_0x35>(),
+          std::make_unique<_0x36>(), std::make_unique<_0x37>(), std::make_unique<_0x38>(),
+          std::make_unique<_0x39>(), std::make_unique<_0x3A>(), std::make_unique<_0x3B>(),
+          std::make_unique<_0x3C>(), std::make_unique<_0x3D>(), std::make_unique<_0x3E>(),
+          std::make_unique<_0x3F>(), std::make_unique<_0x40>(), std::make_unique<_0x41>(),
+          std::make_unique<_0x42>(), std::make_unique<_0x43>(), std::make_unique<_0x44>(),
+          std::make_unique<_0x45>(), std::make_unique<_0x46>(), std::make_unique<_0x47>(),
+          std::make_unique<_0x48>(), std::make_unique<_0x49>(), std::make_unique<_0x4A>(),
+          std::make_unique<_0x4B>(), std::make_unique<_0x4C>(), std::make_unique<_0x4D>(),
+          std::make_unique<_0x4E>(), std::make_unique<_0x4F>(), std::make_unique<_0x50>(),
+          std::make_unique<_0x51>(), std::make_unique<_0x52>(), std::make_unique<_0x53>(),
+          std::make_unique<_0x54>(), std::make_unique<_0x55>(), std::make_unique<_0x56>(),
+          std::make_unique<_0x57>(), std::make_unique<_0x58>(), std::make_unique<_0x59>(),
+          std::make_unique<_0x5A>(), std::make_unique<_0x5B>(), std::make_unique<_0x5C>(),
+          std::make_unique<_0x5D>(), std::make_unique<_0x5E>(), std::make_unique<_0x5F>(),
+          std::make_unique<_0x60>(), std::make_unique<_0x61>(), std::make_unique<_0x62>(),
+          std::make_unique<_0x63>(), std::make_unique<_0x64>(), std::make_unique<_0x65>(),
+          std::make_unique<_0x66>(), std::make_unique<_0x67>(), std::make_unique<_0x68>(),
+          std::make_unique<_0x69>(), std::make_unique<_0x6A>(), std::make_unique<_0x6B>(),
+          std::make_unique<_0x6C>(), std::make_unique<_0x6D>(), std::make_unique<_0x6E>(),
+          std::make_unique<_0x6F>(), std::make_unique<_0x70>(), std::make_unique<_0x71>(),
+          std::make_unique<_0x72>(), std::make_unique<_0x73>(), std::make_unique<_0x74>(),
+          std::make_unique<_0x75>(), std::make_unique<_0x76>(), std::make_unique<_0x77>(),
+          std::make_unique<_0x78>(), std::make_unique<_0x79>(), std::make_unique<_0x7A>(),
+          std::make_unique<_0x7B>(), std::make_unique<_0x7C>(), std::make_unique<_0x7D>(),
+          std::make_unique<_0x7E>(), std::make_unique<_0x7F>(), std::make_unique<_0x80>(),
+          std::make_unique<_0x81>(), std::make_unique<_0x82>(), std::make_unique<_0x83>(),
+          std::make_unique<_0x84>(), std::make_unique<_0x85>(), std::make_unique<_0x86>(),
+          std::make_unique<_0x87>(), std::make_unique<_0x88>(), std::make_unique<_0x89>(),
+          std::make_unique<_0x8A>(), std::make_unique<_0x8B>(), std::make_unique<_0x8C>(),
+          std::make_unique<_0x8D>(), std::make_unique<_0x8E>(), std::make_unique<_0x8F>(),
+          std::make_unique<_0x90>(), std::make_unique<_0x91>(), std::make_unique<_0x92>(),
+          std::make_unique<_0x93>(), std::make_unique<_0x94>(), std::make_unique<_0x95>(),
+          std::make_unique<_0x96>(), std::make_unique<_0x97>(), std::make_unique<_0x98>(),
+          std::make_unique<_0x99>(), std::make_unique<_0x9A>(), std::make_unique<_0x9B>(),
+          std::make_unique<_0x9C>(), std::make_unique<_0x9D>(), std::make_unique<_0x9E>(),
+          std::make_unique<_0x9F>(), std::make_unique<_0xA0>(), std::make_unique<_0xA1>(),
+          std::make_unique<_0xA2>(), std::make_unique<_0xA3>(), std::make_unique<_0xA4>(),
+          std::make_unique<_0xA5>(), std::make_unique<_0xA6>(), std::make_unique<_0xA7>(),
+          std::make_unique<_0xA8>(), std::make_unique<_0xA9>(), std::make_unique<_0xAA>(),
+          std::make_unique<_0xAB>(), std::make_unique<_0xAC>(), std::make_unique<_0xAD>(),
+          std::make_unique<_0xAE>(), std::make_unique<_0xAF>(), std::make_unique<_0xB0>(),
+          std::make_unique<_0xB1>(), std::make_unique<_0xB2>(), std::make_unique<_0xB3>(),
+          std::make_unique<_0xB4>(), std::make_unique<_0xB5>(), std::make_unique<_0xB6>(),
+          std::make_unique<_0xB7>(), std::make_unique<_0xB8>(), std::make_unique<_0xB9>(),
+          std::make_unique<_0xBA>(), std::make_unique<_0xBB>(), std::make_unique<_0xBC>(),
+          std::make_unique<_0xBD>(), std::make_unique<_0xBE>(), std::make_unique<_0xBF>(),
+          std::make_unique<_0xC0>(), std::make_unique<_0xC1>(), std::make_unique<_0xC2>(),
+          std::make_unique<_0xC3>(), std::make_unique<_0xC4>(), std::make_unique<_0xC5>(),
+          std::make_unique<_0xC6>(), std::make_unique<_0xC7>(), std::make_unique<_0xC8>(),
+          std::make_unique<_0xC9>(), std::make_unique<_0xCA>(), std::make_unique<_0xCB>(),
+          std::make_unique<_0xCC>(), std::make_unique<_0xCD>(), std::make_unique<_0xCE>(),
+          std::make_unique<_0xCF>(), std::make_unique<_0xD0>(), std::make_unique<_0xD1>(),
+          std::make_unique<_0xD2>(), std::make_unique<_0xD3>(), std::make_unique<_0xD4>(),
+          std::make_unique<_0xD5>(), std::make_unique<_0xD6>(), std::make_unique<_0xD7>(),
+          std::make_unique<_0xD8>(), std::make_unique<_0xD9>(), std::make_unique<_0xDA>(),
+          std::make_unique<_0xDB>(), std::make_unique<_0xDC>(), std::make_unique<_0xDD>(),
+          std::make_unique<_0xDE>(), std::make_unique<_0xDF>(), std::make_unique<_0xE0>(),
+          std::make_unique<_0xE1>(), std::make_unique<_0xE2>(), std::make_unique<_0xE3>(),
+          std::make_unique<_0xE4>(), std::make_unique<_0xE5>(), std::make_unique<_0xE6>(),
+          std::make_unique<_0xE7>(), std::make_unique<_0xE8>(), std::make_unique<_0xE9>(),
+          std::make_unique<_0xEA>(), std::make_unique<_0xEB>(), std::make_unique<_0xEC>(),
+          std::make_unique<_0xED>(), std::make_unique<_0xEE>(), std::make_unique<_0xEF>(),
+          std::make_unique<_0xF0>(), std::make_unique<_0xF1>(), std::make_unique<_0xF2>(),
+          std::make_unique<_0xF3>(), std::make_unique<_0xF4>(), std::make_unique<_0xF5>(),
+          std::make_unique<_0xF6>(), std::make_unique<_0xF7>(), std::make_unique<_0xF8>(),
+          std::make_unique<_0xF9>(), std::make_unique<_0xFA>(), std::make_unique<_0xFB>(),
+          std::make_unique<_0xFC>(), std::make_unique<_0xFD>(), std::make_unique<_0xFE>(),
+          std::make_unique<_0xFF>(),
   };
   return table;
 }
 
-u8 CPU::update() {
+u8 CPU::update(u64 cycle) {
   if (halt()) {
     // https://gbdev.io/pandocs/halt.html#halt-bug
     // todo: if IME() not set but ie/if is set, we need to handle this bug.
@@ -1448,8 +1512,8 @@ u8 CPU::update() {
       return handleInterrupt();
     } else {
       u8 inst_idx = imm8();
-      GB_ASSERT(inst_idx > 255 || inst_idx < 0);
-      return instruction_table()[inst_idx].update(this);
+      GB_ASSERT(inst_idx <= 255 || inst_idx >= 0);
+      return instruction_table()[inst_idx]->update(this);
     }
   }
   return 1;

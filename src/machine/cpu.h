@@ -28,7 +28,7 @@ public:
     ie_.set(0xffff, 0);
   }
 
-  u8 update();
+  u8 update(u64 cycle);
   u8 handleInterrupt();
 
   u8 A() const { return af_ >> 8; }
@@ -112,19 +112,19 @@ public:
   void IME(bool val) { ime_ = val; }
 
   u8 imm8() {
-    auto ret = memory_bus->get(pc_++);
+    auto ret = memory_bus_->get(pc_++);
     return ret;
   }
 
   u16 imm16() {
-    u8 l  = memory_bus->get(pc_++);
-    u16 h = memory_bus->get(pc_++);
-    return (h << 8) & l;
+    u8 l  = memory_bus_->get(pc_++);
+    u16 h = memory_bus_->get(pc_++);
+    return (h << 8) | l;
   }
 
-  void set(u16 addr, u8 val) { memory_bus->set(addr, val); }
+  void set(u16 addr, u8 val) { memory_bus_->set(addr, val); }
 
-  u8 get(u16 addr) const { return memory_bus->get(addr); }
+  u8 get(u16 addr) const { return memory_bus_->get(addr); }
 
   u8 inc8(u8 val) {
     // https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7#INC_r8
@@ -335,13 +335,15 @@ public:
     return res;
   }
 
+  void memoryBus(MemoryBus *memory_bus) { memory_bus_ = memory_bus; }
+
 private:
   u16 af_{}, bc_{}, de_{}, hl_{};
   u16 pc_{}, sp_{};
   bool halt_{};
   bool ime_{};
 
-  MemoryBus *memory_bus{};
+  MemoryBus *memory_bus_{};
   // https://gbdev.io/pandocs/Interrupts.html
   InterruptEnable ie_;
   InterruptFlag if_;
