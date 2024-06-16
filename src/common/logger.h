@@ -76,10 +76,15 @@ public:
 
   ~LogMessage() {
     stream_ << withColor(false) << std::endl;
-    std::cerr << stream_.str();
-    std::cerr.flush();
-    if (log_level_ == LogLevel::kERROR) {
-      killProcess();
+    if (log_level_ < LogLevel::kWARN) [[likely]] {
+      std::cout << stream_.str();
+      std::cout.flush();
+    } else {
+      std::cerr << stream_.str();
+      std::cerr.flush();
+      if (log_level_ == LogLevel::kERROR) [[unlikely]] {
+        killProcess();
+      }
     }
   }
 
