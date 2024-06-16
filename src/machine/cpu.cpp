@@ -32,7 +32,6 @@ struct Instruction {
   struct _##OP : Instruction {                           \
     constexpr _##OP() : Instruction(#NAME, OP, BYTES) {} \
     u8 update(CPU *cpu) const {                          \
-      GB_LOG(INFO) << #NAME;                             \
       u8 cycle = (CYCLE);
 
 #define DEF_INST_END \
@@ -253,12 +252,16 @@ DEF_INST_END
 DEF_INST(RRA_0_0_0_C, 0x1F, 1, 4)
 u8 c = A() & 0x1;
 A((A() >> 1) | (c << 7));
+zf(0);
+nf(0);
+hf(0);
 cf(c);
 DEF_INST_END
 
 DEF_INST(JR_NZ_e8_x_x_x_x, 0x20, 2, 8)
+u8 target = imm8();
 if (!zf()) {
-  jr(imm8());
+  jr(target);
   cycle = 12;
 }
 DEF_INST_END
@@ -314,8 +317,9 @@ zf(A() == 0x0);
 DEF_INST_END
 
 DEF_INST(JR_Z_e8_x_x_x_x, 0x28, 2, 8)
+u8 target = imm8();
 if (zf()) {
-  jr(imm8());
+  jr(target);
   cycle = 12;
 }
 DEF_INST_END
@@ -352,8 +356,9 @@ A(~A());
 DEF_INST_END
 
 DEF_INST(JR_NC_e8_x_x_x_x, 0x30, 2, 8)
+u8 target = imm8();
 if (!cf()) {
-  jr(imm8());
+  jr(target);
   cycle = 12;
 }
 DEF_INST_END
@@ -390,8 +395,9 @@ cf(1);
 DEF_INST_END
 
 DEF_INST(JR_C_e8_x_x_x_x, 0x38, 2, 8)
+u8 target = imm8();
 if (cf()) {
-  jr(imm8());
+  jr(target);
   cycle = 12;
 }
 DEF_INST_END
@@ -955,8 +961,9 @@ BC(pop16());
 DEF_INST_END
 
 DEF_INST(JP_NZ_a16_x_x_x_x, 0xC2, 3, 12)
+u16 target = imm16();
 if (!zf()) {
-  PC(imm16());
+  PC(target);
   cycle = 16;
 }
 DEF_INST_END
@@ -968,6 +975,7 @@ DEF_INST_END
 DEF_INST(CALL_NZ_a16_x_x_x_x, 0xC4, 3, 12)
 u16 target = imm16();
 if (!zf()) {
+  push16(PC());
   PC(target);
   cycle = 24;
 }
@@ -1215,6 +1223,7 @@ DEF_INST_END
 DEF_INST(CALL_C_a16_x_x_x_x, 0xDC, 3, 12)
 u16 target = imm16();
 if (cf()) {
+  push16(PC());
   PC(target);
   cycle = 24;
 }
@@ -1271,7 +1280,7 @@ PC(HL());
 DEF_INST_END
 
 DEF_INST(LD_xa16x_A_x_x_x_x, 0xEA, 3, 16)
-set(get(imm16()), A());
+set(imm16(), A());
 DEF_INST_END
 
 DEF_INST(ILLEGAL_EB_x_x_x_x, 0xEB, 1, 4)
@@ -1345,7 +1354,7 @@ DEF_INST(ILLEGAL_FD_x_x_x_x, 0xFD, 1, 4)
 DEF_INST_END
 
 DEF_INST(CP_A_n8_Z_1_H_C, 0xFE, 2, 8)
-A(cp8(A(), imm8()));
+cp8(A(), imm8());
 DEF_INST_END
 
 DEF_INST(RST_0x38_x_x_x_x, 0xFF, 1, 16)

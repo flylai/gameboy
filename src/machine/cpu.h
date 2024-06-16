@@ -49,7 +49,7 @@ public:
 
   u8 C() const { return bc_ & 0xff; }
 
-  void C(u8 val) { bc_ = (af_ & 0xff00) | val; }
+  void C(u8 val) { bc_ = (bc_ & 0xff00) | val; }
 
   u16 BC() const { return bc_; }
 
@@ -79,21 +79,21 @@ public:
 
   void HL(u16 val) { hl_ = val; }
 
-  u8 zf() const { return F() & 0x1; }
+  u8 zf() const { return getBitN(F(), 7); }
 
-  void zf(u8 val) { F((val << 0) | clearBitN(F(), 0)); }
+  void zf(u8 val) { F((val << 7) | clearBitN(F(), 7)); }
 
-  u8 nf() const { return F() & 0x2; }
+  u8 nf() const { return getBitN(F(), 6); }
 
-  void nf(u8 val) { F((val << 1) | clearBitN(F(), 1)); }
+  void nf(u8 val) { F((val << 6) | clearBitN(F(), 6)); }
 
-  u8 hf() const { return F() & 0x4; }
+  u8 hf() const { return getBitN(F(), 5); }
 
-  void hf(u8 val) { F((val << 2) | clearBitN(F(), 2)); }
+  void hf(u8 val) { F((val << 5) | clearBitN(F(), 5)); }
 
-  u8 cf() const { return F() & 0x8; }
+  u8 cf() const { return getBitN(F(), 4); }
 
-  void cf(u8 val) { F((val << 3) | clearBitN(F(), 3)); }
+  void cf(u8 val) { F((val << 4) | clearBitN(F(), 4)); }
 
   u16 PC() const { return pc_; }
 
@@ -140,7 +140,7 @@ public:
     u8 res = val - 1;
     zf(res == 0);
     nf(1);
-    hf(getBitN(res, 4) == getBitN(val, 4));
+    hf((res & 0xf) == 0xf);
     return res;
   }
 
@@ -163,16 +163,16 @@ public:
 
   u8 add8(u8 v1, u8 v2) {
     u16 res = v1 + v2;
-    zf(res == 0);
+    zf(res == 0x100);
     nf(0);
-    hf((v1 & 0xf + v2 & 0xf) > 0xf);
+    hf((v1 & 0xf) + (v2 & 0xf) > 0xf);
     cf(res > 0xff);
     return res;
   }
 
   u8 add8(u8 v1, i8 v2) {
     u16 res = v1 + v2;
-    zf(res == 0);
+    zf(res == 0x100);
     nf(0);
     hf((v1 & 0xf + v2 & 0xf) > 0xf);
     cf(res > 0xff);
@@ -190,8 +190,9 @@ public:
 
   u8 sub8(u8 v1, u8 v2) {
     u8 res = v1 - v2;
+    zf(res == 0);
     nf(1);
-    hf((v1 & 0xf) + (v2 & 0xf) > 0xf);
+    hf((v1 & 0xf) < (v2 & 0xf));
     cf(v2 > v1);
     return res;
   }
@@ -233,8 +234,11 @@ public:
   }
 
   u8 cp8(u8 v1, u8 v2) {
-    u8 res = sub8(v1, v2);
-    zf(res == 0);
+    u8 res = v1 - v2;
+    zf(v1 == v2);
+    nf(1);
+    hf((v1 & 0xf) < (v2 & 0xf));
+    cf(v2 > v1);
     return res;
   }
 
@@ -250,7 +254,7 @@ public:
 
   u16 pop16() {
     u16 res = get(sp_++);
-    res |= get(sp_++) << 8;
+    res     = ((u16) get(sp_++) << 8) | res;
     return res;
   }
 
