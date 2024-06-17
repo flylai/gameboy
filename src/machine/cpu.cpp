@@ -250,12 +250,8 @@ E(imm8());
 DEF_INST_END
 
 DEF_INST(RRA_0_0_0_C, 0x1F, 1, 4)
-u8 c = A() & 0x1;
-A((A() >> 1) | (c << 7));
+A(rr8(A()));
 zf(0);
-nf(0);
-hf(0);
-cf(c);
 DEF_INST_END
 
 DEF_INST(JR_NZ_e8_x_x_x_x, 0x20, 2, 8)
@@ -292,28 +288,26 @@ H(imm8());
 DEF_INST_END
 
 DEF_INST(DAA_Z_x_0_C, 0x27, 1, 4)
-if (nf()) {
-  if (hf()) {
-    A(A() + 0xfa);
-  }
-  if (cf()) {
-    A(A() + 0xa0);
-  }
-} else {
-  u8 a = A();
-  if ((A() & 0xf) > 0x9 || hf()) {
-    a += 0x6;
-  }
-  if ((a & 0x1f0) > 0x90 || cf()) {
-    a += 0x60;
-    cf(1);
-  } else {
-    cf(0);
-  }
-  A(a);
+u8 a = A();
+u8 v = cf() ? 0x60 : 0;
+if (hf()) {
+  v |= 0x06;
 }
+if (!nf()) {
+  if ((a & 0x0f) > 0x09) {
+    v |= 0x06;
+  }
+  if (a > 0x99) {
+    v |= 0x60;
+  }
+  a += v;
+} else {
+  a -= v;
+}
+cf(v >= 0x60);
 hf(0);
-zf(A() == 0x0);
+zf(a == 0x0);
+A(a);
 DEF_INST_END
 
 DEF_INST(JR_Z_e8_x_x_x_x, 0x28, 2, 8)
@@ -918,35 +912,35 @@ A(or8(A(), A()));
 DEF_INST_END
 
 DEF_INST(CP_A_B_Z_1_H_C, 0xB8, 1, 4)
-A(or8(A(), B()));
+cp8(A(), B());
 DEF_INST_END
 
 DEF_INST(CP_A_C_Z_1_H_C, 0xB9, 1, 4)
-A(or8(A(), C()));
+cp8(A(), C());
 DEF_INST_END
 
 DEF_INST(CP_A_D_Z_1_H_C, 0xBA, 1, 4)
-A(or8(A(), D()));
+cp8(A(), D());
 DEF_INST_END
 
 DEF_INST(CP_A_E_Z_1_H_C, 0xBB, 1, 4)
-A(or8(A(), E()));
+cp8(A(), E());
 DEF_INST_END
 
 DEF_INST(CP_A_H_Z_1_H_C, 0xBC, 1, 4)
-A(or8(A(), H()));
+cp8(A(), H());
 DEF_INST_END
 
 DEF_INST(CP_A_L_Z_1_H_C, 0xBD, 1, 4)
-A(or8(A(), L()));
+cp8(A(), L());
 DEF_INST_END
 
 DEF_INST(CP_A_xHLx_Z_1_H_C, 0xBE, 1, 8)
-A(or8(A(), get(HL())));
+cp8(A(), get(HL()));
 DEF_INST_END
 
 DEF_INST(CP_A_A_1_1_0_0, 0xBF, 1, 4)
-A(or8(A(), A()));
+cp8(A(), A());
 DEF_INST_END
 
 DEF_INST(RET_NZ_x_x_x_x, 0xC0, 1, 8)
@@ -1015,17 +1009,18 @@ DEF_INST_END
 
 DEF_INST(PREFIX_x_x_x_x, 0xCB, 1, 4)
 // extend instructions
+// https://gbdev.io/pandocs/CPU_Instruction_Set.html#cb-prefix-instructions
 /*
 eg. RLC B
 00000   000
   op    reg
 */
-cycle       = 8;
-u8 inst     = imm8();
-u8 data_bit = inst & 0x7;
+cycle           = 8;
+u8 inst         = imm8();
+u8 data_bit     = inst & 0x7;
+u8 shift_op_bit = (inst >> 3) & 0x7;
 u8 unhandled_data{};
 u8 handled_data{};
-u8 bit_n = inst >> 3 & 0x7; // for set8 res8 bit8
 
 switch (data_bit) {
   case 0:
@@ -1057,43 +1052,46 @@ switch (data_bit) {
     GB_UNREACHABLE();
 }
 
-switch (op) {
-  case 0x00 ... 0x07:
+switch (shift_op_bit) {
+  case 0:
     handled_data = rlc8(unhandled_data);
     break;
-  case 0x08 ... 0x0f:
+  case 1:
     handled_data = rrc8(unhandled_data);
     break;
-  case 0x10 ... 0x17:
+  case 2:
     handled_data = rl8(unhandled_data);
     break;
-  case 0x18 ... 0x1f:
+  case 3:
     handled_data = rr8(unhandled_data);
     break;
-  case 0x20 ... 0x27:
+  case 4:
     handled_data = sla8(unhandled_data);
     break;
-  case 0x28 ... 0x2f:
+  case 5:
     handled_data = sra8(unhandled_data);
     break;
-  case 0x30 ... 0x37:
+  case 6:
     handled_data = swap8(unhandled_data);
     break;
-  case 0x38 ... 0x3f:
+  case 7:
     handled_data = srl8(unhandled_data);
     break;
-  case 0x40 ... 0x7f:
-    handled_data = bit8(bit_n, unhandled_data);
-    cycle        = 12;
+  default: {
+    // bit set operator
+    u8 bit_op_bit = inst >> 6;
+    u8 bit_n      = (inst >> 3) & 0x7; // for set8 res8 bit8
+    if (bit_op_bit == 1) {
+      handled_data = bit8(bit_n, unhandled_data);
+    } else if (bit_op_bit == 2) {
+      handled_data = res8(bit_n, unhandled_data);
+    } else if (bit_op_bit == 3) {
+      handled_data = set8(bit_n, unhandled_data);
+    } else {
+      GB_UNREACHABLE();
+    }
     break;
-  case 0x80 ... 0xbf:
-    handled_data = res8(bit_n, unhandled_data);
-    break;
-  case 0xc0 ... 0xff:
-    handled_data = set8(bit_n, unhandled_data);
-    break;
-  default:
-    GB_UNREACHABLE();
+  }
 }
 
 switch (data_bit) {
@@ -1152,9 +1150,8 @@ PC(0x08);
 DEF_INST_END
 
 DEF_INST(RET_NC_x_x_x_x, 0xD0, 1, 8)
-u16 target = imm16();
 if (!cf()) {
-  PC(target);
+  PC(pop16());
   cycle = 20;
 }
 DEF_INST_END
@@ -1197,9 +1194,8 @@ PC(0x10);
 DEF_INST_END
 
 DEF_INST(RET_C_x_x_x_x, 0xD8, 1, 8)
-u16 target = imm16();
 if (cf()) {
-  PC(target);
+  PC(pop16());
   cycle = 20;
 }
 DEF_INST_END

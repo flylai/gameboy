@@ -41,7 +41,10 @@ public:
 
   u16 AF() const { return af_; }
 
-  void AF(u16 val) { af_ = val; }
+  void AF(u16 val) {
+    af_ = val;
+    af_ = af_ & 0xfff0;
+  }
 
   u8 B() const { return bc_ >> 8; }
 
@@ -181,9 +184,9 @@ public:
 
   u8 adc8(u8 v1, u8 v2) {
     u16 res = v1 + v2 + cf();
-    zf(res == 0);
+    zf(res == 0x100);
     nf(0);
-    hf((v1 & 0xf) + (v2 & 0xf) > 0xf);
+    hf((v1 & 0xf) + (v2 & 0xf) + cf() > 0xf);
     cf(res > 0xff);
     return res;
   }
@@ -268,11 +271,11 @@ public:
   }
 
   u8 rl8(u8 val) {
-    u8 res = val << 1 | cf();
+    u8 res = (val << 1) | cf();
     zf(res == 0);
     nf(0);
     hf(0);
-    cf(val & 0x80);
+    cf(val >> 7);
     return res;
   }
 
@@ -290,7 +293,7 @@ public:
     zf(res == 0);
     nf(0);
     hf(0);
-    cf(val & 0x80);
+    cf(val >> 7);
     return res;
   }
 
@@ -299,13 +302,13 @@ public:
     zf(res == 0);
     nf(0);
     hf(0);
-    cf(val & 0x01);
+    cf(val & 0x1);
     return res;
   }
 
   u8 swap8(u8 val) {
     u8 res = (val >> 4) | (val << 4);
-    zf(0);
+    zf(res == 0);
     nf(0);
     hf(0);
     cf(0);
@@ -325,7 +328,7 @@ public:
     u8 res = getBitN(val, n);
     zf(res == 0);
     nf(0);
-    hf(0);
+    hf(1);
     return res;
   }
 
