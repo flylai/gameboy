@@ -5,7 +5,7 @@
 
 namespace gb {
 
-enum class InterruptType : u8 {
+enum InterruptType : u8 {
   kVBLANK = 0,
   kLCD    = 1,
   kTIMER  = 2,
@@ -16,11 +16,11 @@ enum class InterruptType : u8 {
 template<u16 LO, u16 HI>
 class Interrupt : public Memory<LO, HI> {
 public:
-  void set(u16 addr, u8 interrupt_type) override {
-    Memory<LO, HI>::ram_[0] = clearBitN(Memory<LO, HI>::ram_[0], interrupt_type) | (1 << interrupt_type);
+  void irq(InterruptType interrupt_type) {
+    u8 val = Memory<LO, HI>::get(LO);
+    val    = clearBitN(val, interrupt_type) | (1 << interrupt_type);
+    Memory<LO, HI>::set(LO, val);
   }
-
-  u8 get(u16 addr) const override { return Memory<LO, HI>::ram_[0]; }
 };
 
 class InterruptEnable : public Interrupt<0xffff, 0xffff> {};
