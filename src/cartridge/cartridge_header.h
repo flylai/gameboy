@@ -119,17 +119,35 @@ public:
     return rom_[0x148];
   }
 
+  u8 romSizeByKB() const {
+    if (romSize() <= 8) {
+      return 32 * (1 << romSize());
+    } else {
+      // unofficial type
+      constexpr u8 base  = 0x52;
+      constexpr u8 map[] = {72, 80, 96};
+      u8 offset          = romSize() - base;
+      GB_ASSERT(offset >= 0 && offset <= sizeof(map) / sizeof(map[0]));
+      return 16 * map[offset];
+    }
+  }
+
   u8 ramSize() const {
     // 0x0149
     if (!inAnd(type(), kMBC1_RAM, kMBC1_RAM_BATTERY, kROM_RAM, kROM_RAM_BATTERY, kMMM01_RAM,
                kMMM01_RAM_BATTERY, kMBC3_TIMER_RAM_BATTERY, kMBC3_RAM, kMBC3_RAM_BATTERY, kMBC5_RAM,
                kMBC5_RAM_BATTERY, kMBC5_RUMBLE_RAM, kMBC5_RUMBLE_RAM_BATTERY, kMBC7_SENSOR_RUMBLE_RAM_BATTERY,
                kHuC1_RAM_BATTERY) &&
-        rom_[0x149] != 0) {
-      GB_UNREACHABLE();
+        rom_[0x149] == 0) {
       return 0;
     }
     return rom_[0x149];
+  }
+
+  u8 ramSizeByKB() const {
+    constexpr u8 map[] = {0, 0, 8, 32, 128, 64};
+    GB_ASSERT(ramSize() >= 0 && ramSize() <= sizeof(map) / sizeof(map[0]));
+    return map[ramSize()];
   }
 
   u8 destinationCode() const {
@@ -164,6 +182,8 @@ public:
     // 0x014E-0x014F
     return rom_[0x14e] << 8 & rom_[0x14f];
   }
+
+  u8 *rom() const { return rom_; }
 
 private:
   constexpr inline static u8 nintendo_logo_[] = {
