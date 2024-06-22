@@ -5,6 +5,8 @@
 #include "machine/memory/memory_accessor.h"
 
 namespace gb {
+class MemoryBus;
+
 class Timer : public Memory<0xff04, 0xff07> {
 public:
   Timer() { reset(); }
@@ -12,21 +14,26 @@ public:
   void reset() {
     _DIV(0x18);
     _TIMA(0x00);
-    TMA(0);
+    TMA(0x00);
     TAC(0xf8);
   }
 
   u8 update(u64 cycle) {
     constexpr u8 tac_clock_table[] = {0xff, 0x4, 0xf, 0x40};
     u8 selected_clock              = TAC() & 0x3;
-    if (cycle % tac_clock_table[selected_clock] == 0) {
+    GB_ASSERT(selected_clock <= sizeof(tac_clock_table) / sizeof(tac_clock_table[0]));
+
+    if (cycle >= tima_next_cycle_) {
       increaseTIMA();
+      tima_next_cycle_ += tac_clock_table[selected_clock];
     }
+
     // DIV is incremented at a rate of 16384 Hz
     // we know that RTC uses 4194304 Hz
     // so DIV will increase every 419304/16384=25.59(approx.)
-    if ((cycle % 25) == 0) {
+    if (cycle >= div_next_cycle_) {
       increaseDIV();
+      div_next_cycle_ += 25;
     }
     return 0;
   }
@@ -44,9 +51,10 @@ public:
         Memory::set(addr, val);
         break;
       case 0xff07:
-        Memory::set(addr, (TAC() & 0xf8) | (val & 0x7));
+        Memory::set(addr, val);
         break;
       default:
+        Memory::set(addr, val);
         GB_UNREACHABLE();
     }
   }
@@ -69,26 +77,22 @@ public:
   bool enable() const { return getBitN(TAC(), 2); }
 
   void DIV(u8) {
-    // todo: when CPU execute STOP, DIV will reset too.
+    // todo: when CPU execute `STOP`, DIV will reset too.
     _DIV(0);
   }
 
   u8 DIV() const { return _DIV(); }
 
+  void memoryBus(MemoryBus *memory_bus) { memory_bus_ = memory_bus; }
+
 private:
   void increaseDIV() { _DIV(_DIV() + 1); }
 
-  void increaseTIMA() {
-    if (!enable()) {
-      return;
-    }
-    _TIMA(_TIMA() + 1);
-    if (_TIMA() == 0) {
-      // overflow
-      _TIMA(TMA());
-      // todo: irq
-    }
-  }
+  void increaseTIMA();
+
+  u64 tima_next_cycle_{};
+  u64 div_next_cycle_{};
+  MemoryBus *memory_bus_{};
 
 #undef DEF
 #undef DEF_GET
