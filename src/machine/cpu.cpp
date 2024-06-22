@@ -185,7 +185,7 @@ zf(0);
 nf(0);
 hf(0);
 cf(A() & 0x1);
-A(A() >> 1 | (A() & 0x7f));
+A(A() >> 1 | ((A() & 0x7f) << 7));
 DEF_INST_END
 
 DEF_INST(STOP_n8_x_x_x_x, 0x10, 2, 4)
@@ -1250,7 +1250,7 @@ HL(pop16());
 DEF_INST_END
 
 DEF_INST(LD_xCx_A_x_x_x_x, 0xE2, 1, 8)
-set(OFFSET + imm8(), A());
+set(OFFSET + C(), A());
 DEF_INST_END
 
 DEF_INST(ILLEGAL_E3_x_x_x_x, 0xE3, 1, 4)

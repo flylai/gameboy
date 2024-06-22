@@ -161,7 +161,7 @@ public:
   }
 
   u8 rlc8(u8 val) {
-    u8 res = (val << 1) | (val & 0x80 >> 7);
+    u8 res = (val << 1) | (val >> 7);
     zf(res == 0);
     nf(0);
     hf(0);
