@@ -113,7 +113,12 @@ public:
 
   bool IME() const { return ime_; }
 
-  void IME(bool val) { ime_ = val; }
+  void IME(bool val) {
+    if (val) {
+      interrupt_delay_ = 1;
+    }
+    ime_ = val;
+  }
 
   u8 imm8() {
     auto ret = memory_bus_->get(pc_++);

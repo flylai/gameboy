@@ -1507,26 +1507,38 @@ u8 CPU::update(u64 cycle) {
   if (halt()) {
     // https://gbdev.io/pandocs/halt.html#halt-bug
     // todo: if IME() not set but ie/if is set, we need to handle this bug.
-    if (IME()) {
+    if (IME() || (memory_bus_->get(0xff0f) & memory_bus_->get(0xffff))) {
       halt(false);
     } else {
       // idle
     }
   } else {
     // handle interrupt first
-    if (IME()) {
-      return handleInterrupt();
-    } else {
-      u8 inst_idx = imm8();
-      GB_ASSERT(inst_idx <= 255 || inst_idx >= 0);
-      return instruction_table()[inst_idx]->update(this);
+    u8 irq = handleInterrupt();
+    if (irq != 0) {
+      return irq;
     }
+
+
+    u8 inst_idx = imm8();
+    GB_ASSERT(inst_idx <= 255 || inst_idx >= 0);
+    return instruction_table()[inst_idx]->update(this);
   }
   return 1;
 }
 
 u8 CPU::handleInterrupt() {
-  u8 interrupt_mask               = ie_.get(0xffff) & if_.get(0xff0f);
+  if (!IME()) {
+    return 0;
+  }
+  if (interrupt_delay_ != 0) {
+    interrupt_delay_--;
+    return 0;
+  }
+  u8 interrupt_mask = memory_bus_->get(0xffff) & memory_bus_->get(0xff0f);
+  if (interrupt_mask == 0) {
+    return 0;
+  }
   constexpr u16 interrupt_table[] = {
           0x40, // VBLANK
           0x48, // STAT
@@ -1536,15 +1548,15 @@ u8 CPU::handleInterrupt() {
   };
   // interrupt priority
   // https://gbdev.io/pandocs/Interrupts.html#interrupt-priorities
-  for (u8 i = 0; i < sizeof(interrupt_table) / interrupt_table[0]; i++) {
-    if (getBitN(interrupt_mask, i) & (1 << i)) {
+  for (u8 i = 0; i < sizeof(interrupt_table) / sizeof(interrupt_table[0]); i++) {
+    if (interrupt_mask & (1 << i)) {
       push16(PC());
       PC(interrupt_table[i]);
-      if_.set(0xff0f, if_.get(0xff0f) & ~(1 << i));
-      IME(false);
+      memory_bus_->set(0xff0f, memory_bus_->get(0xff0f) & ~(1 << i));
       break;
     }
   }
+  IME(false);
   return 5;
 }
 
