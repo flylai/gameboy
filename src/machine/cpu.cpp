@@ -148,6 +148,7 @@ DEF_INST_END
 
 DEF_INST(RLCA_0_0_0_C, 0x07, 1, 4)
 A(rlc8(A()));
+zf(0);
 DEF_INST_END
 
 DEF_INST(LD_xa16x_SP_x_x_x_x, 0x08, 3, 20)
