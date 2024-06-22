@@ -230,7 +230,7 @@ jr(imm8());
 DEF_INST_END
 
 DEF_INST(ADD_HL_DE_x_0_H_C, 0x19, 1, 8)
-addHL(DE());
+HL(addHL(DE()));
 DEF_INST_END
 
 DEF_INST(LD_A_xDEx_x_x_x_x, 0x1A, 1, 8)
@@ -502,19 +502,19 @@ D(B());
 DEF_INST_END
 
 DEF_INST(LD_D_C_x_x_x_x, 0x51, 1, 4)
-B(C());
+D(C());
 DEF_INST_END
 
 DEF_INST(LD_D_D_x_x_x_x, 0x52, 1, 4)
-B(D());
+D(D());
 DEF_INST_END
 
 DEF_INST(LD_D_E_x_x_x_x, 0x53, 1, 4)
-B(E());
+D(E());
 DEF_INST_END
 
 DEF_INST(LD_D_H_x_x_x_x, 0x54, 1, 4)
-B(H());
+D(H());
 DEF_INST_END
 
 DEF_INST(LD_D_L_x_x_x_x, 0x55, 1, 4)
