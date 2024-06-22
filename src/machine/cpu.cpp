@@ -128,7 +128,7 @@ BC(imm16());
 DEF_INST_END
 
 DEF_INST(LD_xBCx_A_x_x_x_x, 0x02, 1, 8)
-set(BC() + OFFSET, A());
+set(BC(), A());
 DEF_INST_END
 
 DEF_INST(INC_BC_x_x_x_x, 0x03, 1, 8)
@@ -1021,12 +1021,13 @@ eg. RLC B
 */
 cycle           = 8;
 u8 inst         = imm8();
-u8 data_bit     = inst & 0x7;
+u8 reg_bit      = inst & 0x7;
 u8 shift_op_bit = (inst >> 3) & 0x7;
+u8 bit_op_bit   = inst >> 6;
 u8 unhandled_data{};
 u8 handled_data{};
 
-switch (data_bit) {
+switch (reg_bit) {
   case 0:
     unhandled_data = B();
     break;
@@ -1056,81 +1057,82 @@ switch (data_bit) {
     GB_UNREACHABLE();
 }
 
-switch (shift_op_bit) {
-  case 0:
-    handled_data = rlc8(unhandled_data);
-    break;
-  case 1:
-    handled_data = rrc8(unhandled_data);
-    break;
-  case 2:
-    handled_data = rl8(unhandled_data);
-    break;
-  case 3:
-    handled_data = rr8(unhandled_data);
-    break;
-  case 4:
-    handled_data = sla8(unhandled_data);
-    break;
-  case 5:
-    handled_data = sra8(unhandled_data);
-    break;
-  case 6:
-    handled_data = swap8(unhandled_data);
-    break;
-  case 7:
-    handled_data = srl8(unhandled_data);
-    break;
-  default: {
-    // bit set operator
-    u8 bit_op_bit = inst >> 6;
-    u8 bit_n      = (inst >> 3) & 0x7; // for set8 res8 bit8
-    if (bit_op_bit == 1) {
-      handled_data = bit8(bit_n, unhandled_data);
-    } else if (bit_op_bit == 2) {
-      handled_data = res8(bit_n, unhandled_data);
-    } else if (bit_op_bit == 3) {
-      handled_data = set8(bit_n, unhandled_data);
-    } else {
+if (bit_op_bit != 0) {
+  u8 bit_n = (inst >> 3) & 0x7; // for set8 res8 bit8
+  if (bit_op_bit == 1) {
+    handled_data = bit8(bit_n, unhandled_data);
+  } else if (bit_op_bit == 2) {
+    handled_data = res8(bit_n, unhandled_data);
+  } else if (bit_op_bit == 3) {
+    handled_data = set8(bit_n, unhandled_data);
+  } else {
+    GB_UNREACHABLE();
+  }
+} else {
+  switch (shift_op_bit) {
+    case 0:
+      handled_data = rlc8(unhandled_data);
+      break;
+    case 1:
+      handled_data = rrc8(unhandled_data);
+      break;
+    case 2:
+      handled_data = rl8(unhandled_data);
+      break;
+    case 3:
+      handled_data = rr8(unhandled_data);
+      break;
+    case 4:
+      handled_data = sla8(unhandled_data);
+      break;
+    case 5:
+      handled_data = sra8(unhandled_data);
+      break;
+    case 6:
+      handled_data = swap8(unhandled_data);
+      break;
+    case 7:
+      handled_data = srl8(unhandled_data);
+      break;
+    default: {
       GB_UNREACHABLE();
+      break;
     }
-    break;
   }
 }
-
-switch (data_bit) {
-  case 0:
-    B(handled_data);
-    break;
-  case 1:
-    C(handled_data);
-    break;
-  case 2:
-    D(handled_data);
-    break;
-  case 3:
-    E(handled_data);
-    break;
-  case 4:
-    H(handled_data);
-    break;
-  case 5:
-    L(handled_data);
-    break;
-  case 6:
-    set(HL(), handled_data);
-    break;
-  case 7:
-    A(handled_data);
-    break;
-  default:
-    GB_UNREACHABLE();
+if (bit_op_bit != 1) {
+  switch (reg_bit) {
+    case 0:
+      B(handled_data);
+      break;
+    case 1:
+      C(handled_data);
+      break;
+    case 2:
+      D(handled_data);
+      break;
+    case 3:
+      E(handled_data);
+      break;
+    case 4:
+      H(handled_data);
+      break;
+    case 5:
+      L(handled_data);
+      break;
+    case 6:
+      set(HL(), handled_data);
+      break;
+    case 7:
+      A(handled_data);
+      break;
+    default:
+      GB_UNREACHABLE();
+  }
 }
-
 DEF_INST_END
 
-DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 12)
-u16 target = imm16();
+DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 12) u16 target = imm16();
 if (zf()) {
   push16(PC());
   PC(target);

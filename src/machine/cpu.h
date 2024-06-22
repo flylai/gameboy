@@ -275,7 +275,7 @@ public:
   }
 
   u8 rrc8(u8 val) {
-    u8 res = (val & 0x1 << 7) | (val >> 1);
+    u8 res = (val << 7) | (val >> 1);
     zf(res == 0);
     nf(0);
     hf(0);
@@ -311,7 +311,7 @@ public:
   }
 
   u8 sra8(u8 val) {
-    u8 res = val;
+    u8 res = (val >> 1) | (val & 0x80);
     zf(res == 0);
     nf(0);
     hf(0);
