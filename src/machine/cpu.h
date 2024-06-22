@@ -133,6 +133,11 @@ public:
 
   void set(u16 addr, u8 val) { memory_bus_->set(addr, val); }
 
+  void set16(u16 addr, u16 val) {
+    set(addr, val & 0xff);
+    set(addr + 1, val >> 8);
+  }
+
   u8 get(u16 addr) const { return memory_bus_->get(addr); }
 
   u8 inc8(u8 val) {
@@ -179,12 +184,12 @@ public:
     return res;
   }
 
-  u16 add16(u16 v1, i8 v2) {
-    u16 res = v1 + v2;
+  u16 add16(u16 v1, u8 v2) {
+    u16 res = v1 + (i8) v2;
     zf(0);
     nf(0);
-    hf((v1 & 0xf) + ((u8) v2 & 0xf) > 0xf);
-    cf(res > 0xff);
+    hf((v1 & 0xf) + (v2 & 0xf) > 0xf);
+    cf((v1 & 0xff) + (v2 & 0xff) > 0xff);
     return res;
   }
 

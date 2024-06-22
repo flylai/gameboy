@@ -65,6 +65,7 @@ struct Instruction {
 #define imm8(...) cpu->imm8(__VA_ARGS__)
 #define imm16(...) cpu->imm16(__VA_ARGS__)
 #define set(...) cpu->set(__VA_ARGS__)
+#define set16(...) cpu->set16(__VA_ARGS__)
 #define get(...) cpu->get(__VA_ARGS__)
 #define inc8(...) cpu->inc8(__VA_ARGS__)
 #define dec8(...) cpu->dec8(__VA_ARGS__)
@@ -152,7 +153,7 @@ zf(0);
 DEF_INST_END
 
 DEF_INST(LD_xa16x_SP_x_x_x_x, 0x08, 3, 20)
-set(imm16(), SP());
+set16(imm16(), SP());
 DEF_INST_END
 
 DEF_INST(ADD_HL_BC_x_0_H_C, 0x09, 1, 8)
@@ -1271,7 +1272,7 @@ PC(0x20);
 DEF_INST_END
 
 DEF_INST(ADD_SP_e8_0_0_H_C, 0xE8, 2, 16)
-SP(add16(SP(), (i8) imm8()));
+SP(add16(SP(), imm8()));
 DEF_INST_END
 
 DEF_INST(JP_HL_x_x_x_x, 0xE9, 1, 4)
@@ -1331,7 +1332,7 @@ PC(0x30);
 DEF_INST_END
 
 DEF_INST(LD_HL_SP_e8_0_0_H_C, 0xF8, 2, 12)
-HL(add16(SP(), (i8) imm8()));
+HL(add16(SP(), imm8()));
 DEF_INST_END
 
 DEF_INST(LD_SP_HL_x_x_x_x, 0xF9, 1, 8)
@@ -1382,6 +1383,7 @@ DEF_INST_END
 #undef imm8
 #undef imm16
 #undef set
+#undef set16
 #undef get
 #undef inc8
 #undef dec8
