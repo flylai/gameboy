@@ -125,6 +125,8 @@ public:
     return ret;
   }
 
+  u8 peekImm8() { return memory_bus_->get(pc_); }
+
   u16 imm16() {
     u8 l  = memory_bus_->get(pc_++);
     u16 h = memory_bus_->get(pc_++);
@@ -177,7 +179,7 @@ public:
 
   u8 add8(u8 v1, u8 v2) {
     u16 res = v1 + v2;
-    zf(res == 0x100);
+    zf((u8) res == 0);
     nf(0);
     hf((v1 & 0xf) + (v2 & 0xf) > 0xf);
     cf(res > 0xff);
@@ -195,7 +197,7 @@ public:
 
   u8 adc8(u8 v1, u8 v2) {
     u16 res = v1 + v2 + cf();
-    zf(res == 0x100);
+    zf((u8) res == 0);
     nf(0);
     hf((v1 & 0xf) + (v2 & 0xf) + cf() > 0xf);
     cf(res > 0xff);
