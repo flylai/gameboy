@@ -11,21 +11,22 @@ namespace gb {
 
 class CPU {
 public:
-  CPU() { reset(); }
+  CPU() {}
 
   void reset() {
-    A(0x01);
-    F(0);
-    B(0xff);
+    GB_ASSERT(memory_bus_ != nullptr);
+    A(0x11);
+    F(0xb0);
+    B(0x00);
     C(0x13);
     D(0);
-    E(0xc1);
-    H(0x84);
-    L(0x03);
+    E(0xd8);
+    H(0x01);
+    L(0x4d);
     PC(0x100);
     SP(0xfffe);
-    if_.set(0xff0f, 0xe1);
-    ie_.set(0xffff, 0);
+    memory_bus_->set(0xff0f, 0xe1);
+    memory_bus_->set(0xffff, 0);
   }
 
   u8 update(u64 cycle);
@@ -173,11 +174,11 @@ public:
     return res;
   }
 
-  u8 add8(u8 v1, i8 v2) {
+  u16 add16(u16 v1, i8 v2) {
     u16 res = v1 + v2;
-    zf(res == 0x100);
+    zf(0);
     nf(0);
-    hf((v1 & 0xf + v2 & 0xf) > 0xf);
+    hf((v1 & 0xf) + ((u8) v2 & 0xf) > 0xf);
     cf(res > 0xff);
     return res;
   }
@@ -349,11 +350,9 @@ private:
   u16 pc_{}, sp_{};
   bool halt_{};
   bool ime_{};
+  u8 interrupt_delay_{};
 
   MemoryBus *memory_bus_{};
-  // https://gbdev.io/pandocs/Interrupts.html
-  InterruptEnable ie_;
-  InterruptFlag if_;
 };
 
 } // namespace gb

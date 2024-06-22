@@ -1,5 +1,7 @@
 #include "cpu.h"
 
+#include <dbg.h>
+
 #include <memory>
 #include <string>
 
@@ -1268,7 +1270,7 @@ PC(0x20);
 DEF_INST_END
 
 DEF_INST(ADD_SP_e8_0_0_H_C, 0xE8, 2, 16)
-SP(add8(SP(), (i8) imm8()));
+SP(add16(SP(), (i8) imm8()));
 DEF_INST_END
 
 DEF_INST(JP_HL_x_x_x_x, 0xE9, 1, 4)
@@ -1328,8 +1330,7 @@ PC(0x30);
 DEF_INST_END
 
 DEF_INST(LD_HL_SP_e8_0_0_H_C, 0xF8, 2, 12)
-SP(add8(SP(), imm8()));
-HL(SP());
+HL(add16(SP(), (i8) imm8()));
 DEF_INST_END
 
 DEF_INST(LD_SP_HL_x_x_x_x, 0xF9, 1, 8)
