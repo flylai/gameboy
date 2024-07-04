@@ -1,6 +1,7 @@
 #include "cartridge/cartridge.h"
 #include "common/logger.h"
 #include "machine/interrupt.h"
+#include "machine/joypad.h"
 #include "machine/memory/memory_accessor.h"
 #include "machine/ppu/ppu_register.h"
 #include "machine/serial/serial.h"
@@ -51,7 +52,6 @@ private:
         goto invalid_addr;
       case 0xFE00 ... 0xFE9F:
         // Object attribute memory (OAM)
-        goto invalid_addr;
         return &oam_;
       case 0xFEA0 ... 0xFEFF:
         // Not Usable Nintendo says use of this area is prohibited.
@@ -65,7 +65,7 @@ private:
       // io registers
       case 0xFF00:
         // Joypad input
-        goto invalid_addr;
+        return &joypad_;
       case 0xFF01 ... 0xFF02:
         return serial_;
       case 0xFF04 ... 0xFF07:
@@ -113,6 +113,8 @@ public:
   mutable WorkRam wram_{};
   mutable Memory<0x8000, 0x9fff> vram_{};
   mutable Memory<0xfe00, 0xfe9f> oam_{};
+
+  mutable Joypad joypad_{};
   mutable Serial *serial_{};
   mutable Timer *timer_{};
   mutable InterruptFlag if_;
