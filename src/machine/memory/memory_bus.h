@@ -81,7 +81,6 @@ private:
         goto invalid_addr;
       case 0xFF40 ... 0xFF4B:
         //  LCD Control, Status, Position, Scrolling, and Palettes
-        goto invalid_addr;
         return ppu_registers_;
       case 0xFF4D:
         return &speed_switch_;

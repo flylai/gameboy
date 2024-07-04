@@ -5,6 +5,8 @@
 
 namespace gb {
 
+class MemoryBus;
+
 class PPURegister : public Memory<0xff40, 0xff6b> {
 public:
   PPURegister() { reset(); }
@@ -72,18 +74,12 @@ public:
 
   u8 LY() const { return _LY(); }
 
-  void LY(u8 val) {
-    _LY(val);
-    if (LY() == LYC()) {
-      // set lcd stat LYC=LY
-      if (getBitN(STAT(), 6)) {
-        STAT(setBitN(STAT(), 2));
-      }
-      // todo irq
-    } else {
-      STAT(clearBitN(STAT(), 2));
-    }
-  }
+  void LY(u8 val);
+
+  void memoryBus(MemoryBus* memory_bus) { memory_bus_ = memory_bus; }
+
+private:
+  MemoryBus* memory_bus_{};
 
 #undef DEF
 #undef DEF_GET
