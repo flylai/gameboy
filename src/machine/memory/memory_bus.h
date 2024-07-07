@@ -3,6 +3,7 @@
 #include "machine/interrupt.h"
 #include "machine/joypad.h"
 #include "machine/memory/memory_accessor.h"
+#include "machine/ppu/ppu.h"
 #include "machine/ppu/ppu_register.h"
 #include "machine/serial/serial.h"
 #include "machine/timer.h"
@@ -81,7 +82,7 @@ private:
         goto invalid_addr;
       case 0xFF40 ... 0xFF4B:
         //  LCD Control, Status, Position, Scrolling, and Palettes
-        return ppu_registers_;
+        return ppu_;
       case 0xFF4D:
         return &speed_switch_;
       case 0xFF4F:
@@ -117,7 +118,7 @@ public:
   mutable Serial *serial_{};
   mutable Timer *timer_{};
   mutable InterruptFlag if_;
-  mutable PPURegister *ppu_registers_{};
+  mutable PPU *ppu_{};
   mutable Memory<0xff4d, 0xff4d> speed_switch_{};
   mutable Memory<0xff80, 0xfffe> hram_{};
   mutable InterruptEnable ie_;
