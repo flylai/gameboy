@@ -119,7 +119,7 @@ public:
     return rom_[0x148];
   }
 
-  u8 romSizeByKB() const {
+  u16 romSizeByKB() const {
     if (romSize() <= 8) {
       return 32 * (1 << romSize());
     } else {
@@ -144,8 +144,8 @@ public:
     return rom_[0x149];
   }
 
-  u8 ramSizeByKB() const {
-    constexpr u8 map[] = {0, 0, 8, 32, 128, 64};
+  u16 ramSizeByKB() const {
+    constexpr u8 map[] = {0, 2, 8, 32, 128, 64};
     GB_ASSERT(ramSize() >= 0 && ramSize() <= sizeof(map) / sizeof(map[0]));
     return map[ramSize()];
   }

@@ -29,6 +29,8 @@ public:
     header_ = CartridgeHeader(rom_);
   }
 
+  ~Cartridge() { free(rom_); }
+
   const CartridgeHeader& header() const {
     if (rom_) {
       return header_;
