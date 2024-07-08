@@ -11,9 +11,11 @@ public:
   u8 get(gb::u16 addr) const override {
     switch (addr) {
       case 0xc000 ... 0xcfff:
-        return Memory::get(addr);
+        return ram_[addr - 0xc000];
       case 0xd000 ... 0xdfff:
         return ram_[addr - 0xc000 + wram_idx_.get(0xff70) * 0x1000];
+      case 0xe000 ... 0xfdff:
+        return get(addr - 0xe000 + 0xc000);
       case 0xff70:
         return wram_idx_.get(addr);
       default:
@@ -25,14 +27,16 @@ public:
   void set(gb::u16 addr, gb::u8 val) override {
     switch (addr) {
       case 0xc000 ... 0xcfff:
-        Memory::set(addr, val);
+        ram_[addr - 0xc000] = val;
         break;
       case 0xd000 ... 0xdfff:
-        ram_[addr - 0xc000 + wram_idx_.get(0xff70) * 0x1000] = val;
+        ram_[(u16) (addr - 0xc000 + wram_idx_.get(0xff70) * 0x1000)] = val;
         break;
-      case 0xff70: {
+      case 0xe000 ... 0xfdff:
+        return set(addr - 0xe000 + 0xc000, val);
+      case 0xff70:
         wram_idx_.set(addr, (val & 0x7) == 0 ? 1 : val);
-      } break;
+        break;
       default:
         GB_UNREACHABLE();
     }

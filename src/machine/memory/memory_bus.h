@@ -50,7 +50,7 @@ private:
         return &wram_;
       case 0xE000 ... 0xFDFF:
         // Echo RAM (mirror of C000–DDFF) Nintendo says use of this area is prohibited.
-        goto invalid_addr;
+        return &wram_;
       case 0xFE00 ... 0xFE9F:
         // Object attribute memory (OAM)
         return &oam_;
