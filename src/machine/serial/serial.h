@@ -4,6 +4,7 @@
 
 #include "common/type.h"
 #include "machine/memory/memory_accessor.h"
+#include "serial_buffer.h"
 
 namespace gb {
 class MemoryBus;
@@ -42,13 +43,13 @@ public:
 
   void memoryBus(MemoryBus* memory_bus) { memory_bus_ = memory_bus; }
 
-  void dataQueue(std::queue<u8>* data_queue) { data_queue_ = data_queue; }
+  void buffer(SerialBuffer* data) { data_ = data; }
 
 private:
   MemoryBus* memory_bus_{};
   u8 buffer_{};
   u8 count_{};
-  std::queue<u8>* data_queue_;
+  SerialBuffer* data_{};
 };
 
 } // namespace gb

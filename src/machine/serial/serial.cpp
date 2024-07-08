@@ -8,9 +8,13 @@ u8 Serial::update(u64 cycle) {
     SB(SB() << 1 | 1);
     if (--count_ == 0) {
       enable(false);
-      GB_LOG(INFO) << buffer_;
-      if (data_queue_ != nullptr) {
-        data_queue_->push(buffer_);
+      if (isprint(buffer_)) {
+        GB_LOG(INFO) << buffer_;
+      } else {
+        GB_LOG(INFO) << "0x" << std::hex << (u32) buffer_;
+      }
+      if (data_ != nullptr) {
+        data_->push(buffer_);
       }
     }
   } else {
