@@ -22,11 +22,28 @@ class MemoryBus : public MemoryAccessor {
   };
 
 public:
-  u8 get(u16 addr) const override { return getMemory(addr)->get(addr); }
+  u8 get(u16 addr) const override {
+    if (accessType(addr) == AccessType::kW) {
+      return 0xff;
+    }
+    return getMemory(addr)->get(addr);
+  }
 
-  void set(u16 addr, u8 val) override { getMemory(addr)->set(addr, val); }
+  void set(u16 addr, u8 val) override {
+    if (accessType(addr) == AccessType::kR) {
+      return;
+    }
+    getMemory(addr)->set(addr, val);
+  }
 
 private:
+  enum class AccessType : u8 {
+    kW,
+    kR,
+    kRW,
+    kMIXED,
+  };
+
   MemoryAccessor *getMemory(u16 addr) const {
     switch (addr) {
         // memory
@@ -66,7 +83,7 @@ private:
       // io registers
       case 0xFF00:
         // Joypad input
-        return &joypad_;
+        return joypad_;
       case 0xFF01 ... 0xFF02:
         return serial_;
       case 0xFF04 ... 0xFF07:
@@ -102,10 +119,39 @@ private:
         return &wram_;
       default:
       invalid_addr:
-        GB_LOG(WARN) << "try to access addr " << std::hex << addr << " is invalid_addr";
+        //        GB_LOG(WARN) << "try to access addr " << std::hex << addr << " is invalid_addr";
         return &invalid_memory_;
     }
     GB_UNREACHABLE()
+  }
+
+  static inline AccessType accessType(u16 addr) {
+    static const std::unordered_map<u16, AccessType> m{
+            {0xFF00, AccessType::kMIXED}, {0xFF01, AccessType::kRW},    {0xFF02, AccessType::kRW},
+            {0xFF04, AccessType::kRW},    {0xFF05, AccessType::kRW},    {0xFF06, AccessType::kRW},
+            {0xFF07, AccessType::kRW},    {0xFF0F, AccessType::kRW},    {0xFF10, AccessType::kRW},
+            {0xFF11, AccessType::kMIXED}, {0xFF12, AccessType::kRW},    {0xFF13, AccessType::kW},
+            {0xFF14, AccessType::kMIXED}, {0xFF16, AccessType::kMIXED}, {0xFF17, AccessType::kRW},
+            {0xFF18, AccessType::kW},     {0xFF19, AccessType::kMIXED}, {0xFF1A, AccessType::kRW},
+            {0xFF1B, AccessType::kW},     {0xFF1C, AccessType::kRW},    {0xFF1D, AccessType::kW},
+            {0xFF1E, AccessType::kMIXED}, {0xFF20, AccessType::kW},     {0xFF21, AccessType::kRW},
+            {0xFF22, AccessType::kRW},    {0xFF23, AccessType::kMIXED}, {0xFF24, AccessType::kRW},
+            {0xFF25, AccessType::kRW},    {0xFF26, AccessType::kMIXED}, {0xFF30, AccessType::kRW},
+            {0xFF40, AccessType::kRW},    {0xFF41, AccessType::kMIXED}, {0xFF42, AccessType::kRW},
+            {0xFF43, AccessType::kRW},    {0xFF44, AccessType::kR},     {0xFF45, AccessType::kRW},
+            {0xFF46, AccessType::kRW},    {0xFF47, AccessType::kRW},    {0xFF48, AccessType::kRW},
+            {0xFF49, AccessType::kRW},    {0xFF4A, AccessType::kRW},    {0xFF4B, AccessType::kRW},
+            {0xFF4D, AccessType::kMIXED}, {0xFF4F, AccessType::kRW},    {0xFF51, AccessType::kW},
+            {0xFF52, AccessType::kW},     {0xFF53, AccessType::kW},     {0xFF54, AccessType::kW},
+            {0xFF55, AccessType::kRW},    {0xFF56, AccessType::kMIXED}, {0xFF68, AccessType::kRW},
+            {0xFF69, AccessType::kRW},    {0xFF6A, AccessType::kRW},    {0xFF6B, AccessType::kRW},
+            {0xFF6C, AccessType::kRW},    {0xFF70, AccessType::kRW},    {0xFF76, AccessType::kR},
+            {0xFF77, AccessType::kR},     {0xFFFF, AccessType::kRW},
+    };
+    if (auto it = m.find(addr); it != m.end()) {
+      return it->second;
+    }
+    return AccessType::kRW;
   }
 
 public:
@@ -114,7 +160,7 @@ public:
   mutable Memory<0x8000, 0x9fff> vram_{};
   mutable Memory<0xfe00, 0xfe9f> oam_{};
 
-  mutable Joypad joypad_{};
+  mutable Joypad *joypad_{};
   mutable Serial *serial_{};
   mutable Timer *timer_{};
   mutable InterruptFlag if_;
