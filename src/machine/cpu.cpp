@@ -1,7 +1,5 @@
 #include "cpu.h"
 
-#include <dbg.h>
-
 #include <memory>
 #include <string>
 
@@ -1061,6 +1059,9 @@ if (bit_op_bit != 0) {
   u8 bit_n = (inst >> 3) & 0x7; // for set8 res8 bit8
   if (bit_op_bit == 1) {
     handled_data = bit8(bit_n, unhandled_data);
+    if (reg_bit == 6) {
+      cycle = 12;
+    }
   } else if (bit_op_bit == 2) {
     handled_data = res8(bit_n, unhandled_data);
   } else if (bit_op_bit == 3) {
@@ -1505,7 +1506,7 @@ static const std::unique_ptr<Instruction> *instruction_table() {
           std::make_unique<_0xFC>(), std::make_unique<_0xFD>(), std::make_unique<_0xFE>(),
           std::make_unique<_0xFF>(),
   };
-  return table;
+  return f;
 }
 
 u8 CPU::update(u64 cycle) {
@@ -1563,6 +1564,7 @@ u8 CPU::handleInterrupt() {
   }
   IME(false);
   return 5;
+  // irq wasted 5 M-cycles = 20 T-cycles
 }
 
 
