@@ -6,13 +6,13 @@
 namespace gb {
 
 void Timer::increaseTIMA() {
-  if (!enable()) {
+  if (!enableTIMA()) {
     return;
   }
-  _TIMA(_TIMA() + 1);
-  if (_TIMA() == 0) {
+  TIMA(TIMA() + 1);
+  if (TIMA() == 0x00) {
     // overflow
-    _TIMA(TMA());
+    TIMA(TMA());
     memory_bus_->if_.irq(InterruptType::kTIMER);
   }
 }

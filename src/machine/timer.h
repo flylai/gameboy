@@ -8,32 +8,41 @@ namespace gb {
 class MemoryBus;
 
 class Timer : public Memory<0xff04, 0xff07> {
+
+  struct InternalCounter {
+    u8 m_cycle{};
+    u8 modulo{};
+
+    u8 update(u8 cycle /* M-cycle */) {
+      if (modulo == 0) return 0;
+      u16 sum = m_cycle + cycle;
+      m_cycle = sum % modulo;
+      return sum / modulo;
+    }
+  };
+
 public:
   Timer() { reset(); }
 
   void reset() {
-    _DIV(0x18);
-    _TIMA(0x00);
+    DIV(0x18);
+    TIMA(0x00);
     TMA(0x00);
     TAC(0xf8);
+    div_counter_.modulo   = 0x40;
+    tima_counter_.m_cycle = 0x00;
   }
 
   u8 update(u64 cycle) {
-    constexpr u8 tac_clock_table[] = {0xff, 0x4, 0xf, 0x40};
-    u8 selected_clock              = TAC() & 0x3;
-    GB_ASSERT(selected_clock <= sizeof(tac_clock_table) / sizeof(tac_clock_table[0]));
-
-    if (cycle >= tima_next_cycle_) {
-      increaseTIMA();
-      tima_next_cycle_ += tac_clock_table[selected_clock];
-    }
-
-    // DIV is incremented at a rate of 16384 Hz
-    // we know that RTC uses 4194304 Hz
-    // so DIV will increase every 419304/16384=25.59(approx.)
-    if (cycle >= div_next_cycle_) {
-      increaseDIV();
-      div_next_cycle_ += 25;
+    // DIV will increase per 4194304/16384=256 T-cycles (64 M-cycles)
+    u8 m_cycle = cycle / 4;
+    u8 div_n   = div_counter_.update(m_cycle);
+    DIV(DIV() + div_n);
+    if (enableTIMA()) {
+      u8 tima_n = tima_counter_.update(m_cycle);
+      for (u8 i = 0; i < tima_n; i++) {
+        increaseTIMA();
+      }
     }
     return 0;
   }
@@ -42,27 +51,32 @@ public:
     GB_ASSERT(addr >= 0xff04 && addr <= 0xff07);
     switch (addr) {
       case 0xff04:
-        Memory::set(addr, 0);
+        div_counter_.m_cycle = 0;
+        ram_[addr - 0xff04]  = 0;
         break;
       case 0xff05:
-        Memory::set(addr, val);
-        break;
       case 0xff06:
-        Memory::set(addr, val);
+        ram_[addr - 0xff04] = val;
         break;
-      case 0xff07:
-        Memory::set(addr, val);
-        break;
+      case 0xff07: {
+        if ((TAC() & 0x3) != (val & 0x3)) {
+          constexpr u8 tac_clock_table[] = {0xff, 0x4, 0x10, 0x41};
+          tima_counter_.m_cycle          = 1;
+          tima_counter_.modulo           = tac_clock_table[val & 0x3];
+        }
+        TIMA(TMA());
+        ram_[addr - 0xff04] = val;
+        increaseTIMA();
+      } break;
       default:
-        Memory::set(addr, val);
         GB_UNREACHABLE();
     }
   }
 
-#define DEF(V)         \
-  V(u8, _DIV, 0xff04)  \
-  V(u8, _TIMA, 0xff05) \
-  V(u8, TMA, 0xff06)   \
+#define DEF(V)        \
+  V(u8, DIV, 0xff04)  \
+  V(u8, TIMA, 0xff05) \
+  V(u8, TMA, 0xff06)  \
   V(u8, TAC, 0xff07)
 
 #define DEF_GET(TYPE, NAME, ADDR) \
@@ -74,25 +88,16 @@ public:
   DEF(DEF_GET)
   DEF(DEF_SET)
 
-  bool enable() const { return getBitN(TAC(), 2); }
-
-  void DIV(u8) {
-    // todo: when CPU execute `STOP`, DIV will reset too.
-    _DIV(0);
-  }
-
-  u8 DIV() const { return _DIV(); }
+  bool enableTIMA() const { return getBitN(TAC(), 2); }
 
   void memoryBus(MemoryBus *memory_bus) { memory_bus_ = memory_bus; }
 
 private:
-  void increaseDIV() { _DIV(_DIV() + 1); }
-
   void increaseTIMA();
-
-  u64 tima_next_cycle_{};
-  u64 div_next_cycle_{};
   MemoryBus *memory_bus_{};
+
+  InternalCounter div_counter_;
+  InternalCounter tima_counter_;
 
 #undef DEF
 #undef DEF_GET
