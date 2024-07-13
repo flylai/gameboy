@@ -3,6 +3,8 @@
 **/.vscode/
 **/*.o
 **/.cache/
-**/tests/
+**/res/
+**/tests/*
+!**/tests/download_test.sh
 compile_commands.json
 CMakeLists.txt.user
