@@ -8,34 +8,32 @@ class Joypad : public Memory<0xff00, 0xff00> {
 public:
   Joypad() { ram_[0] = 0xff; }
 
-  u8 update(u64) { return 0; }
+#define DECL_KEY(NAME, TYPE, REG_BIT) void NAME(bool press);
 
-#define DEF_KEY(NAME, CHECK_BIT, REG_BIT) \
-  void NAME(bool press) {                 \
-    if (!getBitN(ram_[0], CHECK_BIT)) {   \
-      return;                             \
-    }                                     \
-    if (press) {                          \
-      p1_##REG_BIT##_clear();             \
-    } else {                              \
-      p1_##REG_BIT##_set();               \
-    }                                     \
-  }
+  DECL_KEY(A, select, 0)
+  DECL_KEY(B, select, 1)
+  DECL_KEY(Select, select, 2)
+  DECL_KEY(Start, select, 3)
+  DECL_KEY(Right, direction, 0)
+  DECL_KEY(Left, direction, 1)
+  DECL_KEY(Up, direction, 2)
+  DECL_KEY(Down, direction, 3)
 
-  DEF_KEY(A, 5, 0);
-  DEF_KEY(B, 5, 1);
-  DEF_KEY(Select, 5, 2);
-  DEF_KEY(Start, 5, 3);
+  void set(gb::u16 addr, gb::u8 val) override { ram_[0] = (val & 0x30) | (ram_[0] & 0xcf); }
 
-  DEF_KEY(Right, 4, 0)
-  DEF_KEY(Left, 4, 1)
-  DEF_KEY(Up, 4, 2)
-  DEF_KEY(Down, 4, 3)
-
-  void set(gb::u16 addr, gb::u8 val) override {
-    u8 p1   = ram_[0];
-    val     = (val & 0x30) | (p1 & 0xcf);
-    ram_[0] = val;
+  u8 get(u16) const override {
+    u8 bits45 = ram_[0] & 0x30;
+    u8 ret    = ram_[0];
+    if (bits45 == 0x10) {
+      // select
+      ret = bits45 | (select_ & 0xf) | 0xc0;
+    } else if (bits45 == 0x20) {
+      // direction
+      ret = bits45 | (direction_ & 0xf) | 0xc0;
+    } else {
+      ret &= 0xff;
+    }
+    return ret;
   }
 
   void memoryBus(MemoryBus* memory_bus) { memory_bus_ = memory_bus; }
@@ -50,23 +48,10 @@ private:
     }
   }
 
-  // A / Right
-  void p1_0_set();
-  void p1_0_clear();
-
-  // B / Left
-  void p1_1_set();
-  void p1_1_clear();
-
-  // Select / Up
-  void p1_2_set();
-  void p1_2_clear();
-
-  // Start / Down
-  void p1_3_set();
-  void p1_3_clear();
+  u8 select_{0xff};
+  u8 direction_{0xff};
 
   MemoryBus* memory_bus_{};
-#undef DEF_KEY
+#undef DECL_KEY
 };
 } // namespace gb
