@@ -88,6 +88,7 @@ struct Instruction {
 #define bit8(...) cpu->bit8(__VA_ARGS__)
 #define res8(...) cpu->res8(__VA_ARGS__)
 #define set8(...) cpu->set8(__VA_ARGS__)
+#define tick(...) cpu->tick()
 
 /*
 let unprefixed = json["unprefixed"]
@@ -941,6 +942,7 @@ cp8(A(), A());
 DEF_INST_END
 
 DEF_INST(RET_NZ_x_x_x_x, 0xC0, 1, 8)
+tick();
 if (!zf()) {
   PC(pop16());
   cycle = 20;
@@ -986,6 +988,7 @@ PC(0x00);
 DEF_INST_END
 
 DEF_INST(RET_Z_x_x_x_x, 0xC8, 1, 8)
+tick();
 if (zf()) {
   PC(pop16());
   cycle = 20;
@@ -1128,7 +1131,8 @@ if (bit_op_bit != 1) {
 }
 DEF_INST_END
 
-DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 12) u16 target = imm16();
+DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 12)
+u16 target = imm16();
 if (zf()) {
   push16(PC());
   PC(target);
@@ -1152,6 +1156,7 @@ PC(0x08);
 DEF_INST_END
 
 DEF_INST(RET_NC_x_x_x_x, 0xD0, 1, 8)
+tick();
 if (!cf()) {
   PC(pop16());
   cycle = 20;
@@ -1196,6 +1201,7 @@ PC(0x10);
 DEF_INST_END
 
 DEF_INST(RET_C_x_x_x_x, 0xD8, 1, 8)
+tick();
 if (cf()) {
   PC(pop16());
   cycle = 20;
@@ -1271,10 +1277,11 @@ DEF_INST_END
 
 DEF_INST(ADD_SP_e8_0_0_H_C, 0xE8, 2, 16)
 SP(add16(SP(), imm8()));
+tick();
 DEF_INST_END
 
 DEF_INST(JP_HL_x_x_x_x, 0xE9, 1, 4)
-PC(HL());
+cpu->PCWithoutTick(HL());
 DEF_INST_END
 
 DEF_INST(LD_xa16x_A_x_x_x_x, 0xEA, 3, 16)
@@ -1331,6 +1338,7 @@ DEF_INST_END
 
 DEF_INST(LD_HL_SP_e8_0_0_H_C, 0xF8, 2, 12)
 HL(add16(SP(), imm8()));
+tick();
 DEF_INST_END
 
 DEF_INST(LD_SP_HL_x_x_x_x, 0xF9, 1, 8)
@@ -1411,6 +1419,7 @@ DEF_INST_END
 #undef bit8
 #undef res8
 #undef set8
+#undef tick
 
 static const std::function<u8(CPU *)> *instruction_table() {
   static std::function<u8(CPU *)> f[]{
@@ -1470,6 +1479,7 @@ u8 CPU::update(u64 cycle) {
     } else {
       // idle
     }
+    tick();
     return 4;
   } else {
     // handle interrupt first
@@ -1496,7 +1506,7 @@ u8 CPU::handleInterrupt() {
   if (interrupt_mask == 0) {
     return 0;
   }
-  constexpr u16 interrupt_table[] = {
+  static constexpr u16 interrupt_table[] = {
           0x40, // VBLANK
           0x48, // STAT
           0x50, // TIMER

@@ -11,11 +11,9 @@ namespace gb {
 
 class CPU {
 public:
-  CPU() {}
-
   void reset() {
     GB_ASSERT(memory_bus_ != nullptr);
-    A(0x11);
+    A(0x01);
     F(0xb0);
     B(0x00);
     C(0x13);
@@ -23,8 +21,8 @@ public:
     E(0xd8);
     H(0x01);
     L(0x4d);
-    PC(0x100);
-    SP(0xfffe);
+    pc_ = 0x100;
+    sp_ = 0xfffe;
     memory_bus_->set(0xff0f, 0xe1);
     memory_bus_->set(0xffff, 0);
   }
@@ -32,117 +30,138 @@ public:
   u8 update(u64 cycle);
   u8 handleInterrupt();
 
-  u8 A() const { return af_ >> 8; }
+  INLINE u8 A() const { return af_ >> 8; }
 
-  void A(u8 val) { af_ = (af_ & 0xff) | ((u16) val << 8); }
+  INLINE void A(u8 val) { af_ = (af_ & 0xff) | ((u16) val << 8); }
 
-  u8 F() const { return af_ & 0xff; }
+  INLINE u8 F() const { return af_ & 0xff; }
 
-  void F(u8 val) { af_ = (af_ & 0xff00) | val; }
+  INLINE void F(u8 val) { af_ = (af_ & 0xff00) | val; }
 
-  u16 AF() const { return af_; }
+  INLINE u16 AF() const { return af_; }
 
-  void AF(u16 val) {
+  INLINE void AF(u16 val) {
     af_ = val;
     af_ = af_ & 0xfff0;
   }
 
-  u8 B() const { return bc_ >> 8; }
+  INLINE u8 B() const { return bc_ >> 8; }
 
-  void B(u8 val) { bc_ = (bc_ & 0xff) | ((u16) val << 8); }
+  INLINE void B(u8 val) { bc_ = (bc_ & 0xff) | ((u16) val << 8); }
 
-  u8 C() const { return bc_ & 0xff; }
+  INLINE u8 C() const { return bc_ & 0xff; }
 
-  void C(u8 val) { bc_ = (bc_ & 0xff00) | val; }
+  INLINE void C(u8 val) { bc_ = (bc_ & 0xff00) | val; }
 
-  u16 BC() const { return bc_; }
+  INLINE u16 BC() const { return bc_; }
 
-  void BC(u16 val) { bc_ = val; }
+  INLINE void BC(u16 val) {
+    tick();
+    bc_ = val;
+  }
 
-  u8 D() const { return de_ >> 8; }
+  INLINE u8 D() const { return de_ >> 8; }
 
-  void D(u8 val) { de_ = (de_ & 0xff) | ((u16) val << 8); }
+  INLINE void D(u8 val) { de_ = (de_ & 0xff) | ((u16) val << 8); }
 
-  u8 E() const { return de_ & 0xff; }
+  INLINE u8 E() const { return de_ & 0xff; }
 
-  void E(u8 val) { de_ = (de_ & 0xff00) | val; }
+  INLINE void E(u8 val) { de_ = (de_ & 0xff00) | val; }
 
-  u16 DE() const { return de_; }
+  INLINE u16 DE() const { return de_; }
 
-  void DE(u16 val) { de_ = val; }
+  INLINE void DE(u16 val) {
+    tick();
+    de_ = val;
+  }
 
-  u8 H() const { return hl_ >> 8; }
+  INLINE u8 H() const { return hl_ >> 8; }
 
-  void H(u8 val) { hl_ = (hl_ & 0xff) | ((u16) val << 8); }
+  INLINE void H(u8 val) { hl_ = (hl_ & 0xff) | ((u16) val << 8); }
 
-  u8 L() const { return hl_ & 0xff; }
+  INLINE u8 L() const { return hl_ & 0xff; }
 
-  void L(u8 val) { hl_ = (hl_ & 0xff00) | val; }
+  INLINE void L(u8 val) { hl_ = (hl_ & 0xff00) | val; }
 
-  u16 HL() const { return hl_; }
+  INLINE u16 HL() const { return hl_; }
 
-  void HL(u16 val) { hl_ = val; }
+  INLINE void HL(u16 val) {
+    tick();
+    hl_ = val;
+  }
 
-  u8 zf() const { return getBitN(F(), 7); }
+  INLINE u8 zf() const { return getBitN(F(), 7); }
 
-  void zf(u8 val) { F((val << 7) | clearBitN(F(), 7)); }
+  INLINE void zf(u8 val) { F((val << 7) | clearBitN(F(), 7)); }
 
-  u8 nf() const { return getBitN(F(), 6); }
+  INLINE u8 nf() const { return getBitN(F(), 6); }
 
-  void nf(u8 val) { F((val << 6) | clearBitN(F(), 6)); }
+  INLINE void nf(u8 val) { F((val << 6) | clearBitN(F(), 6)); }
 
-  u8 hf() const { return getBitN(F(), 5); }
+  INLINE u8 hf() const { return getBitN(F(), 5); }
 
-  void hf(u8 val) { F((val << 5) | clearBitN(F(), 5)); }
+  INLINE void hf(u8 val) { F((val << 5) | clearBitN(F(), 5)); }
 
-  u8 cf() const { return getBitN(F(), 4); }
+  INLINE u8 cf() const { return getBitN(F(), 4); }
 
-  void cf(u8 val) { F((val << 4) | clearBitN(F(), 4)); }
+  INLINE void cf(u8 val) { F((val << 4) | clearBitN(F(), 4)); }
 
-  u16 PC() const { return pc_; }
+  INLINE u16 PC() const { return pc_; }
 
-  void PC(u16 pc) { pc_ = pc; }
+  INLINE void PC(u16 pc) {
+    tick();
+    pc_ = pc;
+  }
 
-  u16 SP() const { return sp_; }
+  INLINE void PCWithoutTick(u16 pc) { pc_ = pc; }
 
-  void SP(u16 sp) { sp_ = sp; }
+  INLINE u16 SP() const { return sp_; }
 
-  bool halt() const { return halt_; }
+  INLINE void SP(u16 sp) {
+    tick();
+    sp_ = sp;
+  }
 
-  void halt(bool val) { halt_ = val; }
+  INLINE bool halt() const { return halt_; }
 
-  bool IME() const { return ime_; }
+  INLINE void halt(bool val) { halt_ = val; }
 
-  void IME(bool val) {
+  INLINE bool IME() const { return ime_; }
+
+  INLINE void IME(bool val) {
     if (val) {
       interrupt_delay_ = 1;
     }
     ime_ = val;
   }
 
-  u8 imm8() {
-    auto ret = memory_bus_->get(pc_++);
+  INLINE u8 imm8() {
+    auto ret = get(pc_++);
     return ret;
   }
 
-  u8 peekImm8() { return memory_bus_->get(pc_); }
-
-  u16 imm16() {
-    u8 l  = memory_bus_->get(pc_++);
-    u16 h = memory_bus_->get(pc_++);
+  INLINE u16 imm16() {
+    u8 l  = imm8();
+    u16 h = imm8();
     return (h << 8) | l;
   }
 
-  void set(u16 addr, u8 val) { memory_bus_->set(addr, val); }
+  INLINE void set(u16 addr, u8 val) {
+    tick();
+    memory_bus_->set(addr, val);
+  }
 
-  void set16(u16 addr, u16 val) {
+  INLINE void set16(u16 addr, u16 val) {
     set(addr, val & 0xff);
     set(addr + 1, val >> 8);
   }
 
-  u8 get(u16 addr) const { return memory_bus_->get(addr); }
+  INLINE u8 get(u16 addr) const {
+    tick();
+    return memory_bus_->get(addr);
+  }
 
-  u8 inc8(u8 val) {
+  INLINE u8 inc8(u8 val) {
     // https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7#INC_r8
     u8 res = val + 1;
     zf(res == 0);
@@ -151,7 +170,7 @@ public:
     return res;
   }
 
-  u8 dec8(u8 val) {
+  INLINE u8 dec8(u8 val) {
     // https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7#DEC_r8
     u8 res = val - 1;
     zf(res == 0);
@@ -160,7 +179,7 @@ public:
     return res;
   }
 
-  u8 rlc8(u8 val) {
+  INLINE u8 rlc8(u8 val) {
     u8 res = (val << 1) | (val >> 7);
     zf(res == 0);
     nf(0);
@@ -169,7 +188,7 @@ public:
     return res;
   }
 
-  u16 addHL(u16 val) {
+  INLINE u16 addHL(u16 val) {
     u16 res = HL() + val;
     nf(0);
     hf((HL() & 0xfff) + (val & 0xfff) > 0xfff);
@@ -177,7 +196,7 @@ public:
     return res;
   }
 
-  u8 add8(u8 v1, u8 v2) {
+  INLINE u8 add8(u8 v1, u8 v2) {
     u16 res = v1 + v2;
     zf((u8) res == 0);
     nf(0);
@@ -186,7 +205,7 @@ public:
     return res;
   }
 
-  u16 add16(u16 v1, u8 v2) {
+  INLINE u16 add16(u16 v1, u8 v2) {
     u16 res = v1 + (i8) v2;
     zf(0);
     nf(0);
@@ -195,7 +214,7 @@ public:
     return res;
   }
 
-  u8 adc8(u8 v1, u8 v2) {
+  INLINE u8 adc8(u8 v1, u8 v2) {
     u16 res = v1 + v2 + cf();
     zf((u8) res == 0);
     nf(0);
@@ -204,7 +223,7 @@ public:
     return res;
   }
 
-  u8 sub8(u8 v1, u8 v2) {
+  INLINE u8 sub8(u8 v1, u8 v2) {
     u8 res = v1 - v2;
     zf(res == 0);
     nf(1);
@@ -213,7 +232,7 @@ public:
     return res;
   }
 
-  u8 sbc8(u8 v1, u8 v2) {
+  INLINE u8 sbc8(u8 v1, u8 v2) {
     u8 res = v1 - v2 - cf();
     zf(res == 0);
     nf(1);
@@ -222,7 +241,7 @@ public:
     return res;
   }
 
-  u8 and8(u8 v1, u8 v2) {
+  INLINE u8 and8(u8 v1, u8 v2) {
     u8 res = v1 & v2;
     zf(res == 0);
     nf(0);
@@ -231,7 +250,7 @@ public:
     return res;
   }
 
-  u8 xor8(u8 v1, u8 v2) {
+  INLINE u8 xor8(u8 v1, u8 v2) {
     u8 res = v1 ^ v2;
     zf(res == 0);
     nf(0);
@@ -240,7 +259,7 @@ public:
     return res;
   }
 
-  u8 or8(u8 v1, u8 v2) {
+  INLINE u8 or8(u8 v1, u8 v2) {
     u8 res = v1 | v2;
     zf(res == 0);
     nf(0);
@@ -249,7 +268,7 @@ public:
     return res;
   }
 
-  u8 cp8(u8 v1, u8 v2) {
+  INLINE u8 cp8(u8 v1, u8 v2) {
     u8 res = v1 - v2;
     zf(v1 == v2);
     nf(1);
@@ -258,23 +277,23 @@ public:
     return res;
   }
 
-  void jr(u8 val) {
+  INLINE void jr(u8 val) {
     i8 v = val;
     PC(v + PC());
   }
 
-  void push16(u16 val) {
+  INLINE void push16(u16 val) {
     set(--sp_, val >> 8);
     set(--sp_, val & 0xff);
   }
 
-  u16 pop16() {
+  INLINE u16 pop16() {
     u16 res = get(sp_++);
     res     = ((u16) get(sp_++) << 8) | res;
     return res;
   }
 
-  u8 rrc8(u8 val) {
+  INLINE u8 rrc8(u8 val) {
     u8 res = (val << 7) | (val >> 1);
     zf(res == 0);
     nf(0);
@@ -283,7 +302,7 @@ public:
     return res;
   }
 
-  u8 rl8(u8 val) {
+  INLINE u8 rl8(u8 val) {
     u8 res = (val << 1) | cf();
     zf(res == 0);
     nf(0);
@@ -292,7 +311,7 @@ public:
     return res;
   }
 
-  u8 rr8(u8 val) {
+  INLINE u8 rr8(u8 val) {
     u8 res = (val >> 1) | (cf() << 7);
     zf(res == 0);
     nf(0);
@@ -301,7 +320,7 @@ public:
     return res;
   }
 
-  u8 sla8(u8 val) {
+  INLINE u8 sla8(u8 val) {
     u8 res = val << 1;
     zf(res == 0);
     nf(0);
@@ -310,7 +329,7 @@ public:
     return res;
   }
 
-  u8 sra8(u8 val) {
+  INLINE u8 sra8(u8 val) {
     u8 res = (val >> 1) | (val & 0x80);
     zf(res == 0);
     nf(0);
@@ -319,7 +338,7 @@ public:
     return res;
   }
 
-  u8 swap8(u8 val) {
+  INLINE u8 swap8(u8 val) {
     u8 res = (val >> 4) | (val << 4);
     zf(res == 0);
     nf(0);
@@ -328,7 +347,7 @@ public:
     return res;
   }
 
-  u8 srl8(u8 val) {
+  INLINE u8 srl8(u8 val) {
     u8 res = val >> 1;
     zf(res == 0);
     nf(0);
@@ -337,7 +356,7 @@ public:
     return res;
   }
 
-  u8 bit8(u8 n, u8 val) {
+  INLINE u8 bit8(u8 n, u8 val) {
     u8 res = getBitN(val, n);
     zf(res == 0);
     nf(0);
@@ -345,17 +364,20 @@ public:
     return res;
   }
 
-  u8 res8(u8 n, u8 val) {
+  INLINE u8 res8(u8 n, u8 val) {
     u8 res = clearBitN(val, n);
     return res;
   }
 
-  u8 set8(u8 n, u8 val) {
+  INLINE u8 set8(u8 n, u8 val) {
     u8 res = setBitN(val, n);
     return res;
   }
 
+  INLINE void tick() const { memory_bus_->tick(); }
+
   void memoryBus(MemoryBus *memory_bus) { memory_bus_ = memory_bus; }
+
 
 private:
   u16 af_{}, bc_{}, de_{}, hl_{};
