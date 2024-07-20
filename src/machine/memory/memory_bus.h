@@ -22,18 +22,71 @@ class MemoryBus : public MemoryAccessor {
   };
 
 public:
+  void reset() {
+    set(0xFF00, 0xCF); //P1
+    set(0xFF01, 0x00); //SB
+    set(0xFF02, 0x7E); //SC
+    set(0xFF04, 0xAB); //DIV
+    set(0xFF05, 0x00); //TIMA
+    set(0xFF06, 0x00); //TMA
+    set(0xFF07, 0xF8); //TAC
+    set(0xFF0F, 0xE1); //IF
+    set(0xFF10, 0x80); //NR10
+    set(0xFF11, 0xBF); //NR11
+    set(0xFF12, 0xF3); //NR12
+    set(0xFF13, 0xFF); //NR13
+    set(0xFF14, 0xBF); //NR14
+    set(0xFF16, 0x3F); //NR21
+    set(0xFF17, 0x00); //NR22
+    set(0xFF18, 0xFF); //NR23
+    set(0xFF19, 0xBF); //NR24
+    set(0xFF1A, 0x7F); //NR30
+    set(0xFF1B, 0xFF); //NR31
+    set(0xFF1C, 0x9F); //NR32
+    set(0xFF1D, 0xFF); //NR33
+    set(0xFF1E, 0xBF); //NR34
+    set(0xFF20, 0xFF); //NR41
+    set(0xFF21, 0x00); //NR42
+    set(0xFF22, 0x00); //NR43
+    set(0xFF23, 0xBF); //NR44
+    set(0xFF24, 0x77); //NR50
+    set(0xFF25, 0xF3); //NR51
+    set(0xFF26, 0xF1); //NR52
+    set(0xFF40, 0x91); //LCDC
+    set(0xFF41, 0x85); //STAT
+    set(0xFF42, 0x00); //SCY
+    set(0xFF43, 0x00); //SCX
+    set(0xFF44, 0x00); //LY
+    set(0xFF45, 0x00); //LYC
+    set(0xFF46, 0xFF); //DMA
+    set(0xFF47, 0xFC); //BGP
+    set(0xFF48, 0x07); //OBP0
+    set(0xFF49, 0x07); //OBP1
+    set(0xFF4A, 0x00); //WY
+    set(0xFF4B, 0x00); //WX
+    set(0xFFFF, 0x00); //IE
+  }
+
   u8 get(u16 addr) const override {
-    if (accessType(addr) == AccessType::kW) {
+    if (accessType(addr) == AccessType::kW) [[unlikely]] {
       return 0xff;
     }
     return getMemory(addr)->get(addr);
   }
 
   void set(u16 addr, u8 val) override {
-    if (accessType(addr) == AccessType::kR) {
+    if (accessType(addr) == AccessType::kR) [[unlikely]] {
       return;
     }
     getMemory(addr)->set(addr, val);
+  }
+
+  void tick() const {
+    for (u8 i = 0; i < 4; i++) {
+      timer_->tick();
+      serial_->tick();
+      ppu_->tick();
+    }
   }
 
 private:
