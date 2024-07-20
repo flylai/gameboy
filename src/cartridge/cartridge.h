@@ -47,9 +47,12 @@ protected:
   u8* rom_{};
   u8 ram_[0x2000 * 128];
 
-  u8 validRamBankMask() const { return header_.ramSizeByKB() * 1024 / 0x2000 - 1; }
+  u8 validRamBankMask() const {
+    static constexpr u8 m[] = {0, 0, 0, 0x3, 0xf, 0x7};
+    return m[header_.ramSize()];
+  }
 
-  u8 validRomBankMask() const { return header_.romSizeByKB() * 1024 / 0x4000 - 1; }
+  u8 validRomBankMask() const { return (1 << (header_.romSize() + 1)) - 1; }
 
   union {
     u8 bank;
