@@ -4,7 +4,7 @@
 #include "memory_accessor.h"
 
 namespace gb {
-class WorkRam : public Memory<0xc000, 0xdfff> {
+class WorkRam : public MemoryAccessor {
 public:
   WorkRam() { wram_idx_.set(0xff70, 0); }
 
@@ -35,7 +35,8 @@ public:
       case 0xe000 ... 0xfdff:
         return set(addr - 0xe000 + 0xc000, val);
       case 0xff70:
-        wram_idx_.set(addr, (val & 0x7) == 0 ? 1 : val);
+        val = val & 0x7;
+        wram_idx_.set(addr, val == 0 ? 1 : val);
         break;
       default:
         GB_UNREACHABLE();
@@ -43,6 +44,7 @@ public:
   }
 
 private:
+  u8 ram_[0x8000]{};
   Memory<0xff70, 0xff70> wram_idx_{};
 };
 

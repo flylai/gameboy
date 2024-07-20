@@ -32,7 +32,6 @@ void Timer::DIV(u16 div) {
     TIMA(TIMA() + 1);
     if (TIMA() == 0) {
       tima_reload_counter_ = 4;
-      return;
     }
   }
 }
