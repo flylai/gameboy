@@ -13,7 +13,7 @@ namespace gb {
 struct Instruction {
   static constexpr u16 OFFSET = 0xff00;
 
-  constexpr Instruction(const std::string &name, u8 op, u8 bytes) //
+  Instruction(const std::string &name, u8 op, u8 bytes) //
       : name(name),                                               //
         op(op),                                                   //
         bytes(bytes) {}
@@ -24,8 +24,8 @@ struct Instruction {
 };
 
 #define DEF_INST(NAME, OP, BYTES, CYCLE)                 \
-  struct _##OP : Instruction {                           \
-    constexpr _##OP() : Instruction(#NAME, OP, BYTES) {} \
+  struct _##OP : Instruction {                 \
+    _##OP() : Instruction(#NAME, OP, BYTES) {} \
     static u8 update(CPU *cpu) {                         \
       u8 cycle = (CYCLE);
 

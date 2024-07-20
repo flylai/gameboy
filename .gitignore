@@ -6,5 +6,6 @@
 **/res/
 **/tests/*
 !**/tests/download_test.sh
+!**/tests/generate_test_report.py
 compile_commands.json
 CMakeLists.txt.user
