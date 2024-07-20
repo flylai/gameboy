@@ -3,22 +3,62 @@ project(gameboy)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -fno-omit-frame-pointer -fsanitize=address")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g -fno-access-control -fno-omit-frame-pointer -fsanitize=address")
+
 
 set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(OpenGL REQUIRED)
 
 set(SRC_DIR ${ROOT_DIR}/src)
-include_directories(${SRC_DIR}/3rdparty)
+set(THIRD_PARTY_DIR ${SRC_DIR}/3rdparty)
+set(IMGUI_DIR ${THIRD_PARTY_DIR}/imgui)
+
+
+include_directories(${THIRD_PARTY_DIR}/nameof/include)
+include_directories(${THIRD_PARTY_DIR}/imgui)
+include_directories(${THIRD_PARTY_DIR}/imgui/backends)
 include_directories(${SRC_DIR})
 
-include_directories(${SRC_DIR}/3rdparty/glad/include)
+add_subdirectory(${THIRD_PARTY_DIR}/nameof)
+add_subdirectory(${THIRD_PARTY_DIR}/googletest)
 
-file(GLOB_RECURSE GB_HEADERS ${SRC_DIR}/*.h)
+set(IMGUI_SOURCES
+        ${IMGUI_DIR}/imgui.cpp
+        ${IMGUI_DIR}/imgui_draw.cpp
+        ${IMGUI_DIR}/imgui_widgets.cpp
+        ${IMGUI_DIR}/imgui_tables.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+        ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        ${IMGUI_DIR}/imgui_demo.cpp
+)
 
-add_executable(gameboy src/main.cpp ${GB_HEADERS} ${SRC_DIR}/machine/cpu.cpp)
+file(GLOB_RECURSE GB_HEADERS
+        ${SRC_DIR}/cartridge/*.h
+        ${SRC_DIR}/common/*.h
+        ${SRC_DIR}/machine/*.h
+)
 
+
+file(GLOB_RECURSE GB_SRCS
+        ${SRC_DIR}/cartridge/*.cpp
+        ${SRC_DIR}/common/*.cpp
+        ${SRC_DIR}/machine/*.cpp
+)
+
+add_executable(gameboy
+        src/main.cpp
+        ${GB_HEADERS}
+        ${GB_SRCS}
+        ${IMGUI_SOURCES}
+)
+
+add_executable(gb_test
+        ${SRC_DIR}/test/run_tests.cpp
+        ${SRC_DIR}/test/test_set.cpp
+        ${GB_HEADERS}
+        ${GB_SRCS}
+)
 
 target_link_libraries(gameboy glfw OpenGL::GL)
+target_link_libraries(gb_test GTest::gtest_main)
