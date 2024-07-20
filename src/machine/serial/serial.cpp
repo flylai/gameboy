@@ -3,7 +3,7 @@
 #include "machine/memory/memory_bus.h"
 
 namespace gb {
-u8 Serial::update(u64 cycle) {
+void Serial::tick() {
   if (enable() && count_) {
     SB(SB() << 1 | 1);
     if (--count_ == 0) {
@@ -21,7 +21,6 @@ u8 Serial::update(u64 cycle) {
     buffer_ = SB();
     count_  = 8;
   }
-  return 0;
 }
 
 void Serial::enable(u8 val) {

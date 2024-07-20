@@ -16,7 +16,7 @@ public:
     SC(0x7c);
   }
 
-  u8 update(u64 cycle);
+  void tick();
 
   void SB(u8 val) { set(0xff01, val); }
 

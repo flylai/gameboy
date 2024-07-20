@@ -27,7 +27,7 @@ public:
     memory_bus_->set(0xffff, 0);
   }
 
-  u8 update(u64 cycle);
+  u8 update();
   u8 handleInterrupt();
 
   INLINE u8 A() const { return af_ >> 8; }

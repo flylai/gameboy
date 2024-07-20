@@ -1470,7 +1470,7 @@ static const std::function<u8(CPU *)> *instruction_table() {
   return f;
 }
 
-u8 CPU::update(u64 cycle) {
+u8 CPU::update() {
   if (halt()) {
     // https://gbdev.io/pandocs/halt.html#halt-bug
     // todo: if IME() not set but ie/if is set, we need to handle this bug.
