@@ -13,7 +13,7 @@ namespace gb {
 
 class CartridgeHeader {
 public:
-  static constexpr int HEADER_LEN = 0x150 - 0x100;
+  static constexpr int HEADER_LEN = 0x150;
   CartridgeHeader()               = default;
 
   CartridgeHeader(u8 *rom) : rom_{rom} {}
