@@ -1,8 +1,8 @@
 #include "cartridge/cartridge.h"
 #include "cartridge/cartridge_factory.h"
-#include "cpu.h"
-#include "rtc.h"
-#include "timer.h"
+#include "machine/cpu/cpu.h"
+#include "machine/cpu/rtc.h"
+#include "machine/cpu/timer.h"
 
 #pragma once
 

@@ -1,6 +1,6 @@
 #include "timer.h"
 
-#include "interrupt.h"
+#include "machine/cpu/interrupt.h"
 #include "machine/memory/memory_bus.h"
 
 namespace gb {
