@@ -14,6 +14,8 @@ struct TestParams {
   std::string path;
   Monitor::CheckFunction result_checker;
 
+  bool operator<(const TestParams &rhs) const { return path < rhs.path; }
+
   friend std::ostream &operator<<(std::ostream &o, const TestParams &param) { return o << param.path; }
 };
 
@@ -54,6 +56,7 @@ static std::vector<TestParams> getFileList(const std::string &path,
       checkFile(entry);
     }
   }
+  std::sort(v.begin(), v.end());
   return v;
 }
 
