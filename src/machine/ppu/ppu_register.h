@@ -38,7 +38,7 @@ public:
   V(u8, STAT, 0xff41)  \
   V(u8, SCY, 0xff42)   \
   V(u8, SCX, 0xff43)   \
-  V(u8, LY, 0xff44)    \
+  V(u8, _LY, 0xff44)   \
   V(u8, LYC, 0xff45)   \
   V(u8, DMA, 0xff46)   \
   V(u8, BGP, 0xff47)   \
@@ -73,7 +73,18 @@ public:
 
   PPUMode mode() const { return static_cast<PPUMode>(STAT() & 0x3); }
 
-  void mode(PPUMode val) { STAT(STAT() & 0xfc | static_cast<u8>(val)); }
+  void mode(PPUMode val);
+
+  void LY(u8 val) {
+    _LY(val);
+    if (_LY() == LYC()) {
+      STAT(setBitN(STAT(), 2));
+    } else {
+      STAT(clearBitN(STAT(), 2));
+    }
+  }
+
+  u8 LY() const { return _LY(); }
 
   void memoryBus(MemoryBus* memory_bus) { memory_bus_ = memory_bus; }
 

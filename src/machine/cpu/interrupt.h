@@ -7,7 +7,7 @@ namespace gb {
 
 enum InterruptType : u8 {
   kVBLANK = 0,
-  kLCD    = 1,
+  kLCDSTAT = 1,
   kTIMER  = 2,
   kSERIAL = 3,
   kJOYPAD = 4,

@@ -5,7 +5,6 @@
 #include "machine/joypad.h"
 #include "machine/memory/memory_accessor.h"
 #include "machine/ppu/ppu.h"
-#include "machine/ppu/ppu_register.h"
 #include "machine/serial/serial.h"
 #include "work_ram.h"
 
