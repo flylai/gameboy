@@ -75,14 +75,7 @@ public:
 
   void mode(PPUMode val);
 
-  void LY(u8 val) {
-    _LY(val);
-    if (_LY() == LYC()) {
-      STAT(setBitN(STAT(), 2));
-    } else {
-      STAT(clearBitN(STAT(), 2));
-    }
-  }
+  void LY(u8 val);
 
   u8 LY() const { return _LY(); }
 

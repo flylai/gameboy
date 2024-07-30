@@ -3,6 +3,7 @@
 #include "machine/cpu/cpu.h"
 #include "machine/cpu/rtc.h"
 #include "machine/cpu/timer.h"
+#include "machine/ppu/ppu.h"
 
 #pragma once
 
