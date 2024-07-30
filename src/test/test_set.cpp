@@ -112,12 +112,11 @@ INSTANTIATE_TEST_SUITE_P(gb_test_roms_interrupt_time, GBTest,
                                                          gb_test_roms_checker, false)),
                          GBTest::ParamToString);
 
-INSTANTIATE_TEST_SUITE_P(mts_mbc1, GBTest,
+INSTANTIATE_TEST_SUITE_P(mts_emulator_only_mbc1, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/mts/emulator-only/mbc1/", mts_checker,
                                                          false)),
                          GBTest::ParamToString);
 
-INSTANTIATE_TEST_SUITE_P(mts_timer, GBTest,
-                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/timer/", mts_checker,
-                                                         false)),
+INSTANTIATE_TEST_SUITE_P(mts_acceptance, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/", mts_checker, true)),
                          GBTest::ParamToString);
