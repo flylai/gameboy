@@ -9,6 +9,8 @@ struct ObjectAttribute {
   u8 tile_index;
   u8 attrs;
 
+  bool operator<(const ObjectAttribute &o) const { return x > o.x; }
+
   u8 priority() const { return attrs >> 7; }
 
   u8 yFlip() const { return attrs & 0x40; }
