@@ -8,7 +8,7 @@
 using namespace gb;
 
 namespace fs          = std::filesystem;
-constexpr u64 TIMEOUT = 30; // seconds
+constexpr u64 TIMEOUT = 5; // seconds
 
 struct TestParams {
   std::string path;
