@@ -117,6 +117,29 @@ INSTANTIATE_TEST_SUITE_P(mts_emulator_only_mbc1, GBTest,
                                                          false)),
                          GBTest::ParamToString);
 
-INSTANTIATE_TEST_SUITE_P(mts_acceptance, GBTest,
-                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/", mts_checker, true)),
+INSTANTIATE_TEST_SUITE_P(mts_acceptance_bits, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/bits", mts_checker, false)),
+                         GBTest::ParamToString);
+
+INSTANTIATE_TEST_SUITE_P(mts_acceptance_instr, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/instr", mts_checker,
+                                                         false)),
+                         GBTest::ParamToString);
+
+INSTANTIATE_TEST_SUITE_P(mts_acceptance_interrupts, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/interrupts", mts_checker,
+                                                         false)),
+                         GBTest::ParamToString);
+
+INSTANTIATE_TEST_SUITE_P(mts_acceptance_ppu, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/ppu", mts_checker, false)),
+                         GBTest::ParamToString);
+
+INSTANTIATE_TEST_SUITE_P(mts_acceptance_timer, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/timer", mts_checker,
+                                                         false)),
+                         GBTest::ParamToString);
+
+INSTANTIATE_TEST_SUITE_P(mts_acceptance_root, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/", mts_checker, false)),
                          GBTest::ParamToString);
