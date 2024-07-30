@@ -1,9 +1,9 @@
 # Google Test Report
 
-Commit: [13003a6f69ec6bd47347e67ec9cccf89b743dc51](https://github.com/flylai/gameboy/commit/13003a6f69ec6bd47347e67ec9cccf89b743dc51)
+Commit: [883340960259769089e3b81ae8aa471f8e79682f](https://github.com/flylai/gameboy/commit/883340960259769089e3b81ae8aa471f8e79682f)
 
 ## Suite: gb_test_roms_cpu_instrs/GBTest
-- ✅ **Test**: ../tests/gb-test-roms/cpu_instrs/cpu_instrs.gb
+- ❌ **Test**: ../tests/gb-test-roms/cpu_instrs/cpu_instrs.gb
 - ✅ **Test**: ../tests/gb-test-roms/cpu_instrs/individual/01-special.gb
 - ✅ **Test**: ../tests/gb-test-roms/cpu_instrs/individual/02-interrupts.gb
 - ✅ **Test**: ../tests/gb-test-roms/cpu_instrs/individual/03-op sp,hl.gb
@@ -34,7 +34,7 @@ Commit: [13003a6f69ec6bd47347e67ec9cccf89b743dc51](https://github.com/flylai/gam
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/rom_512kb.gb
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/rom_8Mb.gb
 ## Suite: mts_acceptance_bits/GBTest
-- ❌ **Test**: ../tests/mts/acceptance/bits/mem_oam.gb
+- ✅ **Test**: ../tests/mts/acceptance/bits/mem_oam.gb
 - ✅ **Test**: ../tests/mts/acceptance/bits/reg_f.gb
 - ❌ **Test**: ../tests/mts/acceptance/bits/unused_hwio-GS.gb
 ## Suite: mts_acceptance_instr/GBTest
