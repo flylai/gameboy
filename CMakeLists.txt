@@ -3,8 +3,7 @@ project(gameboy)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -O0 -g -fno-access-control -fno-omit-frame-pointer -fsanitize=address")
-
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Wall -O0 -g -fno-access-control -fno-omit-frame-pointer -fsanitize=address")
 
 set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -59,6 +58,8 @@ add_executable(gb_test
         ${GB_HEADERS}
         ${GB_SRCS}
 )
+
+target_compile_options(gb_test PRIVATE -O3)
 
 target_link_libraries(gameboy glfw OpenGL::GL)
 target_link_libraries(gb_test GTest::gtest_main)
