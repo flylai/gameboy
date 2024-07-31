@@ -112,6 +112,17 @@ INSTANTIATE_TEST_SUITE_P(gb_test_roms_interrupt_time, GBTest,
                                                          gb_test_roms_checker, false)),
                          GBTest::ParamToString);
 
+INSTANTIATE_TEST_SUITE_P(gb_test_roms_mem_timing, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/gb-test-roms/mem_timing",
+                                                         gb_test_roms_checker, true)),
+                         GBTest::ParamToString);
+
+
+INSTANTIATE_TEST_SUITE_P(gb_test_roms_mem_timing2, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/gb-test-roms/mem_timing-2",
+                                                         gb_test_roms_checker, true)),
+                         GBTest::ParamToString);
+
 INSTANTIATE_TEST_SUITE_P(mts_emulator_only_mbc1, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/mts/emulator-only/mbc1/", mts_checker,
                                                          false)),
