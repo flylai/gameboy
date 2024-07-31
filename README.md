@@ -1,6 +1,6 @@
 # Google Test Report
 
-Commit: [883340960259769089e3b81ae8aa471f8e79682f](https://github.com/flylai/gameboy/commit/883340960259769089e3b81ae8aa471f8e79682f)
+Commit: [7ad57fc8649efb3e646d58e31d24f2f7758c2a2e](https://github.com/flylai/gameboy/commit/7ad57fc8649efb3e646d58e31d24f2f7758c2a2e)
 
 ## Suite: gb_test_roms_cpu_instrs/GBTest
 - ❌ **Test**: ../tests/gb-test-roms/cpu_instrs/cpu_instrs.gb
@@ -19,6 +19,16 @@ Commit: [883340960259769089e3b81ae8aa471f8e79682f](https://github.com/flylai/gam
 - ❌ **Test**: ../tests/gb-test-roms/instr_timing/instr_timing.gb
 ## Suite: gb_test_roms_interrupt_time/GBTest
 - ❌ **Test**: ../tests/gb-test-roms/interrupt_time/interrupt_time.gb
+## Suite: gb_test_roms_mem_timing/GBTest
+- ❌ **Test**: ../tests/gb-test-roms/mem_timing/individual/01-read_timing.gb
+- ❌ **Test**: ../tests/gb-test-roms/mem_timing/individual/02-write_timing.gb
+- ❌ **Test**: ../tests/gb-test-roms/mem_timing/individual/03-modify_timing.gb
+- ❌ **Test**: ../tests/gb-test-roms/mem_timing/mem_timing.gb
+## Suite: gb_test_roms_mem_timing2/GBTest
+- ❌ **Test**: ../tests/gb-test-roms/mem_timing-2/mem_timing.gb
+- ❌ **Test**: ../tests/gb-test-roms/mem_timing-2/rom_singles/01-read_timing.gb
+- ❌ **Test**: ../tests/gb-test-roms/mem_timing-2/rom_singles/02-write_timing.gb
+- ❌ **Test**: ../tests/gb-test-roms/mem_timing-2/rom_singles/03-modify_timing.gb
 ## Suite: mts_emulator_only_mbc1/GBTest
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/bits_bank1.gb
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/bits_bank2.gb
