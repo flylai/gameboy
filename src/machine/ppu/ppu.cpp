@@ -24,7 +24,7 @@ void PPU::dmaUpdate() {
 void PPU::increaseLY() {
   ppu_reg_.LY(ppu_reg_.LY() + 1);
   if (windowEnable() && windowVisible() //
-      && ppu_reg_.LY() >= ppu_reg_.WY() //
+      && ppu_reg_.LY() > ppu_reg_.WY()  //
       && ppu_reg_.LY() < (u16) (ppu_reg_.WY() + 144)) {
     fetcher_window_line_++;
   }
