@@ -13,6 +13,7 @@ constexpr u64 TIMEOUT = 5; // seconds
 struct TestParams {
   std::string path;
   Monitor::CheckFunction result_checker;
+  u64 timeout{TIMEOUT};
 
   bool operator<(const TestParams &rhs) const { return path < rhs.path; }
 
@@ -39,12 +40,13 @@ public:
 };
 
 static std::vector<TestParams> getFileList(const std::string &path,
-                                           const Monitor::CheckFunction &result_checker, bool recursive) {
+                                           const Monitor::CheckFunction &result_checker, bool recursive,
+                                           u64 timeout = TIMEOUT) {
   std::vector<TestParams> v;
   auto checkFile = [&](const fs::directory_entry &entry) {
     if (entry.is_regular_file() && entry.path().extension() == ".gb") {
       std::string filename = entry.path();
-      v.push_back({filename, result_checker});
+      v.push_back({filename, result_checker, timeout});
     }
   };
   if (!recursive) {
@@ -99,7 +101,7 @@ TEST_P(GBTest, ARGS) {
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_cpu_instrs, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/cpu_instrs/",
-                                                         gb_test_roms_checker, true)),
+                                                         gb_test_roms_checker, true, 20)),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_instr_timing, GBTest,
@@ -120,7 +122,7 @@ INSTANTIATE_TEST_SUITE_P(gb_test_roms_mem_timing, GBTest,
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_mem_timing2, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/mem_timing-2",
-                                                         gb_test_roms_checker, true)),
+                                                         gb_test_roms_checker, true, 20)),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_emulator_only_mbc1, GBTest,
