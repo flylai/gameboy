@@ -60,6 +60,8 @@ public:
     bc_ = val;
   }
 
+  INLINE void BCWithoutTick(u16 val) { bc_ = val; }
+
   INLINE u8 D() const { return de_ >> 8; }
 
   INLINE void D(u8 val) { de_ = (de_ & 0xff) | ((u16) val << 8); }
@@ -75,6 +77,8 @@ public:
     de_ = val;
   }
 
+  INLINE void DEWithoutTick(u16 val) { de_ = val; }
+
   INLINE u8 H() const { return hl_ >> 8; }
 
   INLINE void H(u8 val) { hl_ = (hl_ & 0xff) | ((u16) val << 8); }
@@ -89,6 +93,8 @@ public:
     tick();
     hl_ = val;
   }
+
+  INLINE void HLWithoutTick(u16 val) { hl_ = val; }
 
   INLINE u8 zf() const { return getBitN(F(), 7); }
 
@@ -121,6 +127,8 @@ public:
     tick();
     sp_ = sp;
   }
+
+  INLINE void SPWithoutTick(u16 sp) { sp_ = sp; }
 
   INLINE bool halt() const { return halt_; }
 
@@ -374,10 +382,14 @@ public:
     return res;
   }
 
-  INLINE void tick() const { memory_bus_->tick(); }
+  INLINE void tick() const {
+    timing_checker_++;
+    memory_bus_->tick();
+  }
+
+  u8 &timingChecker() { return timing_checker_; }
 
   void memoryBus(MemoryBus *memory_bus) { memory_bus_ = memory_bus; }
-
 
 private:
   u16 af_{}, bc_{}, de_{}, hl_{};
@@ -387,6 +399,8 @@ private:
   u8 interrupt_delay_{};
 
   MemoryBus *memory_bus_{};
+
+  mutable u8 timing_checker_{};
 };
 
 } // namespace gb

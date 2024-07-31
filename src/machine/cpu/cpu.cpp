@@ -14,8 +14,8 @@ struct Instruction {
   static constexpr u16 OFFSET = 0xff00;
 
   Instruction(const std::string &name, u8 op, u8 bytes) //
-      : name(name),                                               //
-        op(op),                                                   //
+      : name(name),                                     //
+        op(op),                                         //
         bytes(bytes) {}
 
   const std::string name;
@@ -23,16 +23,18 @@ struct Instruction {
   const u8 bytes{};
 };
 
-#define DEF_INST(NAME, OP, BYTES, CYCLE)                 \
+#define DEF_INST(NAME, OP, BYTES, CYCLE)       \
   struct _##OP : Instruction {                 \
     _##OP() : Instruction(#NAME, OP, BYTES) {} \
-    static u8 update(CPU *cpu) {                         \
-      u8 cycle = (CYCLE);
+    static u8 update(CPU *cpu) {               \
+      u8 cycle             = (CYCLE);          \
+      cpu->timingChecker() = 0;
 
-#define DEF_INST_END \
-  return cycle;      \
-  }                  \
-  }                  \
+#define DEF_INST_END                                  \
+  GB_ASSERT((cpu->timingChecker() + 1) * 4 == cycle); \
+  return cycle;                                       \
+  }                                                   \
+  }                                                   \
   ;
 
 
@@ -42,18 +44,23 @@ struct Instruction {
 #define B(...) cpu->B(__VA_ARGS__)
 #define C(...) cpu->C(__VA_ARGS__)
 #define BC(...) cpu->BC(__VA_ARGS__)
+#define BCWithoutTick(...) cpu->BCWithoutTick(__VA_ARGS__)
 #define D(...) cpu->D(__VA_ARGS__)
 #define E(...) cpu->E(__VA_ARGS__)
 #define DE(...) cpu->DE(__VA_ARGS__)
+#define DEWithoutTick(...) cpu->DEWithoutTick(__VA_ARGS__)
 #define H(...) cpu->H(__VA_ARGS__)
 #define L(...) cpu->L(__VA_ARGS__)
 #define HL(...) cpu->HL(__VA_ARGS__)
+#define HLWithoutTick(...) cpu->HLWithoutTick(__VA_ARGS__)
 #define zf(...) cpu->zf(__VA_ARGS__)
 #define nf(...) cpu->nf(__VA_ARGS__)
 #define hf(...) cpu->hf(__VA_ARGS__)
 #define cf(...) cpu->cf(__VA_ARGS__)
 #define PC(...) cpu->PC(__VA_ARGS__)
+#define PCWithoutTick(...) cpu->PCWithoutTick(__VA_ARGS__)
 #define SP(...) cpu->SP(__VA_ARGS__)
+#define SPWithoutTick(...) cpu->SPWithoutTick(__VA_ARGS__)
 #define halt(...) cpu->halt(__VA_ARGS__)
 #define imm8(...) cpu->imm8(__VA_ARGS__)
 #define imm16(...) cpu->imm16(__VA_ARGS__)
@@ -118,7 +125,7 @@ DEF_INST(NOP_x_x_x_x, 0x00, 1, 4)
 DEF_INST_END
 
 DEF_INST(LD_BC_n16_x_x_x_x, 0x01, 3, 12)
-BC(imm16());
+BCWithoutTick(imm16());
 DEF_INST_END
 
 DEF_INST(LD_xBCx_A_x_x_x_x, 0x02, 1, 8)
@@ -187,7 +194,7 @@ DEF_INST(STOP_n8_x_x_x_x, 0x10, 2, 4)
 DEF_INST_END
 
 DEF_INST(LD_DE_n16_x_x_x_x, 0x11, 3, 12)
-DE(imm16());
+DEWithoutTick(imm16());
 DEF_INST_END
 
 DEF_INST(LD_xDEx_A_x_x_x_x, 0x12, 1, 8)
@@ -261,12 +268,12 @@ if (!zf()) {
 DEF_INST_END
 
 DEF_INST(LD_HL_n16_x_x_x_x, 0x21, 3, 12)
-HL(imm16());
+HLWithoutTick(imm16());
 DEF_INST_END
 
 DEF_INST(LD_xHLx_A_x_x_x_x, 0x22, 1, 8)
 set(HL(), A());
-HL(HL() + 1);
+HLWithoutTick(HL() + 1);
 DEF_INST_END
 
 DEF_INST(INC_HL_x_x_x_x, 0x23, 1, 8)
@@ -322,7 +329,7 @@ DEF_INST_END
 
 DEF_INST(LD_A_xHLx_x_x_x_x, 0x2A, 1, 8)
 A(get(HL()));
-HL(HL() + 1);
+HLWithoutTick(HL() + 1);
 DEF_INST_END
 
 DEF_INST(DEC_HL_x_x_x_x, 0x2B, 1, 8)
@@ -356,12 +363,12 @@ if (!cf()) {
 DEF_INST_END
 
 DEF_INST(LD_SP_n16_x_x_x_x, 0x31, 3, 12)
-SP(imm16());
+SPWithoutTick(imm16());
 DEF_INST_END
 
 DEF_INST(LD_xHLx_A_x_x_x_x, 0x32, 1, 8)
 set(HL(), A());
-HL(HL() - 1);
+HLWithoutTick(HL() - 1);
 DEF_INST_END
 
 DEF_INST(INC_SP_x_x_x_x, 0x33, 1, 8)
@@ -400,7 +407,7 @@ DEF_INST_END
 
 DEF_INST(LD_A_xHLx_x_x_x_x, 0x3A, 1, 8)
 A(get(HL()));
-HL(HL() - 1);
+HLWithoutTick(HL() - 1);
 DEF_INST_END
 
 DEF_INST(DEC_SP_x_x_x_x, 0x3B, 1, 8)
@@ -950,7 +957,7 @@ if (!zf()) {
 DEF_INST_END
 
 DEF_INST(POP_BC_x_x_x_x, 0xC1, 1, 12)
-BC(pop16());
+BCWithoutTick(pop16());
 DEF_INST_END
 
 DEF_INST(JP_NZ_a16_x_x_x_x, 0xC2, 3, 12)
@@ -975,6 +982,7 @@ if (!zf()) {
 DEF_INST_END
 
 DEF_INST(PUSH_BC_x_x_x_x, 0xC5, 1, 16)
+tick();
 push16(BC());
 DEF_INST_END
 
@@ -983,8 +991,9 @@ A(add8(A(), imm8()));
 DEF_INST_END
 
 DEF_INST(RST_0x00_x_x_x_x, 0xC7, 1, 16)
+tick();
 push16(PC());
-PC(0x00);
+PCWithoutTick(0x00);
 DEF_INST_END
 
 DEF_INST(RET_Z_x_x_x_x, 0xC8, 1, 8)
@@ -1151,8 +1160,9 @@ A(adc8(A(), imm8()));
 DEF_INST_END
 
 DEF_INST(RST_0x08_x_x_x_x, 0xCF, 1, 16)
+tick();
 push16(PC());
-PC(0x08);
+PCWithoutTick(0x08);
 DEF_INST_END
 
 DEF_INST(RET_NC_x_x_x_x, 0xD0, 1, 8)
@@ -1164,7 +1174,7 @@ if (!cf()) {
 DEF_INST_END
 
 DEF_INST(POP_DE_x_x_x_x, 0xD1, 1, 12)
-DE(pop16());
+DEWithoutTick(pop16());
 DEF_INST_END
 
 DEF_INST(JP_NC_a16_x_x_x_x, 0xD2, 3, 12)
@@ -1188,6 +1198,7 @@ if (!cf()) {
 DEF_INST_END
 
 DEF_INST(PUSH_DE_x_x_x_x, 0xD5, 1, 16)
+tick();
 push16(DE());
 DEF_INST_END
 
@@ -1196,8 +1207,9 @@ A(sub8(A(), imm8()));
 DEF_INST_END
 
 DEF_INST(RST_0x10_x_x_x_x, 0xD7, 1, 16)
+tick();
 push16(PC());
-PC(0x10);
+PCWithoutTick(0x10);
 DEF_INST_END
 
 DEF_INST(RET_C_x_x_x_x, 0xD8, 1, 8)
@@ -1241,8 +1253,9 @@ A(sbc8(A(), imm8()));
 DEF_INST_END
 
 DEF_INST(RST_0x18_x_x_x_x, 0xDF, 1, 16)
+tick();
 push16(PC());
-PC(0x18);
+PCWithoutTick(0x18);
 DEF_INST_END
 
 DEF_INST(LDH_xa8x_A_x_x_x_x, 0xE0, 2, 12)
@@ -1250,7 +1263,7 @@ set(OFFSET + imm8(), A());
 DEF_INST_END
 
 DEF_INST(POP_HL_x_x_x_x, 0xE1, 1, 12)
-HL(pop16());
+HLWithoutTick(pop16());
 DEF_INST_END
 
 DEF_INST(LD_xCx_A_x_x_x_x, 0xE2, 1, 8)
@@ -1263,6 +1276,7 @@ DEF_INST(ILLEGAL_E4_x_x_x_x, 0xE4, 1, 4)
 DEF_INST_END
 
 DEF_INST(PUSH_HL_x_x_x_x, 0xE5, 1, 16)
+tick();
 push16(HL());
 DEF_INST_END
 
@@ -1271,8 +1285,9 @@ A(and8(A(), imm8()));
 DEF_INST_END
 
 DEF_INST(RST_0x20_x_x_x_x, 0xE7, 1, 16)
+tick();
 push16(PC());
-PC(0x20);
+PCWithoutTick(0x20);
 DEF_INST_END
 
 DEF_INST(ADD_SP_e8_0_0_H_C, 0xE8, 2, 16)
@@ -1281,7 +1296,7 @@ tick();
 DEF_INST_END
 
 DEF_INST(JP_HL_x_x_x_x, 0xE9, 1, 4)
-cpu->PCWithoutTick(HL());
+PCWithoutTick(HL());
 DEF_INST_END
 
 DEF_INST(LD_xa16x_A_x_x_x_x, 0xEA, 3, 16)
@@ -1300,8 +1315,9 @@ A(xor8(A(), imm8()));
 DEF_INST_END
 
 DEF_INST(RST_0x28_x_x_x_x, 0xEF, 1, 16)
+tick();
 push16(PC());
-PC(0x28);
+PCWithoutTick(0x28);
 DEF_INST_END
 
 DEF_INST(LDH_A_xa8x_x_x_x_x, 0xF0, 2, 12)
@@ -1324,6 +1340,7 @@ DEF_INST(ILLEGAL_F4_x_x_x_x, 0xF4, 1, 4)
 DEF_INST_END
 
 DEF_INST(PUSH_AF_x_x_x_x, 0xF5, 1, 16)
+tick();
 push16(AF());
 DEF_INST_END
 
@@ -1332,13 +1349,13 @@ A(or8(A(), imm8()));
 DEF_INST_END
 
 DEF_INST(RST_0x30_x_x_x_x, 0xF7, 1, 16)
+tick();
 push16(PC());
-PC(0x30);
+PCWithoutTick(0x30);
 DEF_INST_END
 
 DEF_INST(LD_HL_SP_e8_0_0_H_C, 0xF8, 2, 12)
 HL(add16(SP(), imm8()));
-tick();
 DEF_INST_END
 
 DEF_INST(LD_SP_HL_x_x_x_x, 0xF9, 1, 8)
@@ -1363,9 +1380,11 @@ cp8(A(), imm8());
 DEF_INST_END
 
 DEF_INST(RST_0x38_x_x_x_x, 0xFF, 1, 16)
+tick();
 push16(PC());
-PC(0x38);
+PCWithoutTick(0x38);
 DEF_INST_END
+
 
 #undef A
 #undef F
@@ -1373,18 +1392,23 @@ DEF_INST_END
 #undef B
 #undef C
 #undef BC
+#undef BCWithoutTick
 #undef D
 #undef E
 #undef DE
+#undef DEWithoutTick
 #undef H
 #undef L
 #undef HL
+#undef HLWithoutTick
 #undef zf
 #undef nf
 #undef hf
 #undef cf
 #undef PC
+#undef PCWithoutTick
 #undef SP
+#undef SPWithoutTick
 #undef halt
 #undef imm8
 #undef imm16
@@ -1520,11 +1544,13 @@ u8 CPU::handleInterrupt() {
       push16(PC());
       PC(interrupt_table[i]);
       memory_bus_->set(0xff0f, memory_bus_->get(0xff0f) & ~(1 << i));
+
       break;
     }
   }
   IME(false);
-  // irq wasted 5 M-cycles = 20 T-cycles
+  tick();
+  // irq spent 5 M-cycles = 20 T-cycles
   return 20;
 }
 
