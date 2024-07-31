@@ -67,18 +67,16 @@ public:
   }
 
   std::string_view title() const {
-    // 0x0134-0x013E
-    u16 end_addr = 0x13e;
+    // 0x0134-0x0143
+    u16 end_addr = 0x143;
     for (u16 i = 0x0134; i <= end_addr; i++) {
       if (rom_[i] == 0) {
         end_addr = i;
         break;
       }
     }
-    char buf[222];
-    sprintf(buf, "%s", rom_[0x134]);
-    return {};
-    return {reinterpret_cast<char *>(rom_[0x134]), end_addr - 0x134u};
+    char *buf = reinterpret_cast<char *>(rom_) + 0x134;
+    return {buf, buf + (end_addr - 0x134)};
   }
 
   u32 manufacturerCode() const {
