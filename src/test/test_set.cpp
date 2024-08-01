@@ -96,7 +96,7 @@ TEST_P(GBTest, ARGS) {
   TestParams param = GetParam();
   GameBoy gb(param.path);
   Monitor monitor(&gb, param.result_checker);
-  EXPECT_TRUE(monitor.run(TIMEOUT));
+  EXPECT_TRUE(monitor.run(param.timeout));
 }
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_cpu_instrs, GBTest,
@@ -116,7 +116,7 @@ INSTANTIATE_TEST_SUITE_P(gb_test_roms_interrupt_time, GBTest,
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_mem_timing, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/mem_timing",
-                                                         gb_test_roms_checker, true)),
+                                                         gb_test_roms_checker, true, 20)),
                          GBTest::ParamToString);
 
 

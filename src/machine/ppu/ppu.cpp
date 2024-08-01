@@ -153,7 +153,7 @@ void PPU::mixPixel() {
   if (objectEnable()) {
     sprite_color = applyPalette(sprite_pixel_.color, sprite_pixel_.palette);
     if (sprite_color != 0 && (!sprite_pixel_.bg_priority || (bg_color == 0 || win_color == 0))) {
-      setPixel(buffer, x - 7, y, default_palette_[sprite_color][0], default_palette_[sprite_color][1],
+      setPixel(buffer, x - 8, y, default_palette_[sprite_color][0], default_palette_[sprite_color][1],
                default_palette_[sprite_color][2]);
     }
   }
