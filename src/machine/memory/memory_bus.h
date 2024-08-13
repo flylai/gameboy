@@ -1,5 +1,6 @@
 #include "cartridge/cartridge.h"
 #include "common/logger.h"
+#include "machine/apu/apu.h"
 #include "machine/cpu/interrupt.h"
 #include "machine/cpu/timer.h"
 #include "machine/joypad.h"
@@ -87,6 +88,7 @@ public:
       timer_->tick();
       serial_->tick();
       ppu_->tick();
+      apu_->tick();
     }
   }
 
@@ -147,10 +149,10 @@ private:
         return &if_;
       case 0xFF10 ... 0xFF26:
         //  Audio
-        goto invalid_addr;
+        return apu_;
       case 0xFF30 ... 0xFF3F:
         //  Wave pattern
-        goto invalid_addr;
+        return apu_;
       case 0xFF40 ... 0xFF4B:
         //  LCD Control, Status, Position, Scrolling, and Palettes
         return ppu_;
@@ -218,6 +220,7 @@ public:
   mutable Serial *serial_{};
   mutable Timer *timer_{};
   mutable InterruptFlag if_;
+  mutable APU *apu_{};
   mutable PPU *ppu_{};
   mutable Memory<0xff4d, 0xff4d> speed_switch_{};
   mutable Memory<0xff80, 0xfffe> hram_{};
