@@ -17,6 +17,7 @@ set(IMGUI_DIR ${THIRD_PARTY_DIR}/imgui)
 include_directories(${THIRD_PARTY_DIR}/nameof/include)
 include_directories(${THIRD_PARTY_DIR}/imgui)
 include_directories(${THIRD_PARTY_DIR}/imgui/backends)
+include_directories(${THIRD_PARTY_DIR}/miniaudio)
 include_directories(${SRC_DIR})
 
 add_subdirectory(${THIRD_PARTY_DIR}/nameof)
@@ -55,11 +56,12 @@ add_executable(gameboy
 add_executable(gb_test
         ${SRC_DIR}/test/run_tests.cpp
         ${SRC_DIR}/test/test_set.cpp
+        ${SRC_DIR}/test/circle_buffer_test.cpp
         ${GB_HEADERS}
         ${GB_SRCS}
 )
 
-target_compile_options(gb_test PRIVATE -O3)
+target_compile_options(gb_test PRIVATE -O0)
 
-target_link_libraries(gameboy glfw OpenGL::GL)
+target_link_libraries(gameboy glfw OpenGL::GL m pthread dl)
 target_link_libraries(gb_test GTest::gtest_main)
