@@ -39,14 +39,14 @@ public:
   }
 
   void tickSweep() {
-    // if (!sweep_enable_) {
-    //   return;
-    // }
+    if (sweep_timer_ > 0) {
+      sweep_timer_--;
+    }
 
-    if (--sweep_timer_ == 0) {
+    if (sweep_timer_ == 0) {
       sweep_timer_ = sweepPace() == 0 ? 8 : sweepPace();
 
-      if (sweepPace() != 0) {
+      if (sweep_enable_ && sweepPace() != 0) {
         // calculate new frequency
         u16 new_freq = calculateFrequency();
         if (new_freq > 2047 && sweepIndividualStep() != 0) {
@@ -73,6 +73,9 @@ public:
       Channel2::set(addr + 5, val);
       if (inOr(addr, 0xff13, 0xff14)) {
         frequency_ = Channel2::period();
+      }
+      if (addr == 0xff14 && getBitN(val, 7) && dacEnable()) {
+        trigger();
       }
     }
   }
