@@ -18,7 +18,7 @@ public:
     period_timer_--;
   }
 
-  void trigger() override {}
+  void trigger() override { length_timer_.trigger(); }
 
   bool enable() const override { return channel_enable_ && dacEnable() && !length_timer_.expiring(); }
 
@@ -26,13 +26,11 @@ public:
     if (!dacEnable() || outputLevel() == 0) {
       return 0;
     }
-    u8 wave = wave_pattern_ram_[wave_position_ << 1];
+    u8 wave = wave_pattern_ram_[wave_position_ >> 1];
     if (wave_position_ & 1) {
-      wave &= 0x0f;
-    } else {
       wave >>= 4;
     }
-
+    wave &= 0x0f;
     wave >>= outputLevel() - 1;
     return wave;
   }
@@ -76,6 +74,7 @@ public:
         length_timer_.setNRx4Event(val);
         if (getBitN(val, 7)) {
           trigger();
+          channel_enable_ &= dacEnable();
         }
         break;
       case 0xff30 ... 0xff3f:
