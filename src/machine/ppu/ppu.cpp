@@ -17,7 +17,13 @@ void PPU::dmaUpdate() {
 
   constexpr u16 OAM_BASE = 0xfe00;
   u16 dma_base           = memory_bus_->get(0xff46);
-  memory_bus_->set(OAM_BASE + dma_offset_, memory_bus_->get(dma_base * 0x100 + dma_offset_));
+
+  u16 offset             = dma_base * 0x100 + dma_offset_;
+  if (offset > 0xe000) {
+    offset &= ~0x2000;
+  }
+
+  memory_bus_->set(OAM_BASE + dma_offset_, memory_bus_->get(offset));
   dma_enable_ = ++dma_offset_ <= 0x9f;
 }
 
