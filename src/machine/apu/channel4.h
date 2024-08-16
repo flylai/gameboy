@@ -44,7 +44,9 @@ public:
     channel_enable_ = true;
   }
 
-  bool enable() const override { return channel_enable_ && envelope_.dacEnable() && lengthTimer_.enable(); }
+  bool enable() const override { return channel_enable_ && dacEnable() && !lengthTimer_.expiring(); }
+
+  bool dacEnable() const override { return envelope_.dacEnable(); }
 
   u8 get(u16 addr) const override {
     switch (addr) {

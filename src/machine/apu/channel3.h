@@ -20,7 +20,7 @@ public:
 
   void trigger() override {}
 
-  bool enable() const override { return channel_enable_ & dacEnable(); }
+  bool enable() const override { return channel_enable_ && dacEnable() && !length_timer_.expiring(); }
 
   i16 output() const override {
     if (!dacEnable() || outputLevel() == 0) {
@@ -85,7 +85,7 @@ public:
     }
   }
 
-  bool dacEnable() const { return getBitN(nr30_, 7); }
+  bool dacEnable() const override { return getBitN(nr30_, 7); }
 
   u8 outputLevel() const { return (nr32_ >> 5) & 0x3; }
 

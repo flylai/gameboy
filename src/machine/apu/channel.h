@@ -11,15 +11,17 @@ class Channel : public MemoryAccessor {
 public:
   explicit Channel(u16 length = 64) : length_timer_(length) {}
 
-  virtual ~Channel()          = default;
+  virtual ~Channel()             = default;
 
-  virtual void tick()         = 0;
+  virtual void tick()            = 0;
 
-  virtual void trigger()      = 0;
+  virtual void trigger()         = 0;
 
-  virtual bool enable() const = 0;
+  virtual bool enable() const    = 0;
 
-  virtual i16 output() const  = 0;
+  virtual i16 output() const     = 0;
+
+  virtual bool dacEnable() const = 0;
 
   // channel 123
   // channel 1 will override this

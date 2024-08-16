@@ -23,20 +23,20 @@ public:
     period_timer_ = (2048 - period()) << 2;
     length_timer_.trigger();
     envelope_.trigger();
-    channel_enable_ = envelope_.dacEnable();
+    channel_enable_ = dacEnable();
   }
 
   i16 output() const override {
     if (!enable()) {
       return 0;
     } else {
-      return (wave_duty_[length_timer_.waveDuty()][wave_duty_position_] * envelope_.currentVolume());
+      return wave_duty_[length_timer_.waveDuty()][wave_duty_position_] * envelope_.currentVolume();
     }
   }
 
-  bool enable() const override {
-    return channel_enable_ && envelope_.dacEnable() && !length_timer_.expiring();
-  }
+  bool enable() const override { return channel_enable_ && dacEnable() && !length_timer_.expiring(); }
+
+  bool dacEnable() const override { return envelope_.dacEnable(); }
 
   u8 get(u16 addr) const override {
     if (addr == 0xff16) {
@@ -57,7 +57,7 @@ public:
       length_timer_.set(addr, val);
     } else if (addr == 0xff17) {
       envelope_.set(addr, val);
-      channel_enable_ &= envelope_.dacEnable();
+      channel_enable_ &= dacEnable();
     } else if (addr == 0xff18) {
       nrx3_ = val;
     } else if (addr == 0xff19) {
@@ -65,7 +65,7 @@ public:
       length_timer_.setNRx4Event(val);
       if (getBitN(val, 7)) {
         trigger();
-        if (envelope_.dacEnable()) {
+        if (dacEnable()) {
           channel_enable_ = true;
         }
       }

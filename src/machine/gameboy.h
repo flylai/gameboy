@@ -1,5 +1,6 @@
 #include "cartridge/cartridge.h"
 #include "cartridge/cartridge_factory.h"
+#include "machine/apu/apu.h"
 #include "machine/cpu/cpu.h"
 #include "machine/cpu/rtc.h"
 #include "machine/cpu/timer.h"
@@ -19,6 +20,7 @@ public:
     memory_bus_.ppu_       = &ppu_;
     memory_bus_.serial_    = &serial_;
     memory_bus_.joypad_    = &joypad_;
+    memory_bus_.apu_       = &apu_;
     cpu_.memoryBus(&memory_bus_);
     ppu_.memoryBus(&memory_bus_);
     timer_.memoryBus(&memory_bus_);
@@ -38,5 +40,6 @@ public:
   MemoryBus memory_bus_;
   PPU ppu_;
   Joypad joypad_;
+  APU apu_;
 };
 } // namespace gb
