@@ -12,22 +12,23 @@ public:
   using Channel::Channel;
 
   void tick() override {
-    if (--period_timer_ == 0) {
+    if (period_timer_ == 0) {
       u8 bit0 = lfsr_ & 1;
       u8 bit1 = (lfsr_ >> 1) & 1;
       u8 res  = bit0 ^ bit1;
       lfsr_ >>= 1;
 
-      lfsr_ = clearBitN(lfsr_, 15);
+      lfsr_ = clearBitN(lfsr_, 14);
       lfsr_ |= res << 14;
 
-      if (lsfrWidth() == 7) {
-        lfsr_ = clearBitN(lfsr_, 7);
-        lfsr_ = (lfsr_ & 0x8000) >> 8;
+      if (lsfrWidth() == 15) {
+        lfsr_ = clearBitN(lfsr_, 6);
+        lfsr_ |= res << 6;
       }
 
       period_timer_ = divisors_[clockDivisor()] << clockShift();
     }
+    period_timer_--;
   }
 
   i16 output() const override {
@@ -41,7 +42,7 @@ public:
     envelope_.trigger();
     period_timer_   = divisors_[clockDivisor()] << clockShift();
     lfsr_           = rand();
-    channel_enable_ = true;
+    channel_enable_ = dacEnable();
   }
 
   bool enable() const override { return channel_enable_ && dacEnable() && !lengthTimer_.expiring(); }
@@ -80,6 +81,7 @@ public:
 
         if (getBitN(val, 7)) {
           trigger();
+          channel_enable_ &= dacEnable();
         }
         break;
       default:
