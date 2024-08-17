@@ -100,7 +100,7 @@ private:
 } // namespace utils
 
 //constexpr static utils::LogLevel GLOBAL_LOG_LEVEL = utils::LogLevel::kTRACE;
-constexpr static utils::LogLevel GLOBAL_LOG_LEVEL = utils::LogLevel::kDEBUG;
+constexpr static utils::LogLevel GLOBAL_LOG_LEVEL = utils::LogLevel::kINFO;
 
 #define GB_LOG_STREAM(log_level) ::utils::LogMessage(log_level, __FILE__, __LINE__).stream()
 
