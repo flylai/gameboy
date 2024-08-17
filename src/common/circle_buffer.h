@@ -54,7 +54,7 @@ public:
 
   void clear() { head_ = tail_ = 0; }
 
-  u32 size() const { return (tail_ + capacity_ - head_) % capacity_; }
+  u64 size() const { return (tail_ + capacity_ - head_) % capacity_; }
 
   bool empty() const { return tail_ == head_; }
 

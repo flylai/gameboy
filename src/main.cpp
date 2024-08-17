@@ -1,6 +1,5 @@
 #include <cstdio>
 
-#include "common/bmp_writter.h"
 #include "common/type.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
