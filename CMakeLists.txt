@@ -30,7 +30,6 @@ set(IMGUI_SOURCES
         ${IMGUI_DIR}/imgui_tables.cpp
         ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
-        ${IMGUI_DIR}/imgui_demo.cpp
 )
 
 file(GLOB_RECURSE GB_HEADERS
@@ -61,7 +60,7 @@ add_executable(gb_test
         ${GB_SRCS}
 )
 
-target_compile_options(gb_test PRIVATE -O0)
+target_compile_options(gb_test PRIVATE -O3)
 
 target_link_libraries(gameboy glfw OpenGL::GL m pthread dl)
 target_link_libraries(gb_test GTest::gtest_main)
