@@ -13,12 +13,12 @@ static inline bool inOr(R cond, U... args) {
 }
 
 template<typename T>
-inline static T clearBitN(T val, int n) {
+inline static constexpr T clearBitN(T val, int n) {
   return val & ~(1 << n);
 }
 
 template<typename T>
-inline static T getBitN(T val, int n) {
+inline static T constexpr getBitN(T val, int n) {
   return val >> n & 1;
 }
 
