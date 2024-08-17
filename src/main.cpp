@@ -254,7 +254,6 @@ int main(int argc, char* argv[]) {
     }
     //  Joypad status
     {
-      ImGui::Begin("Keyboard Input");
 #define DEF_KEY(KEY, ACTION)                  \
   if (ImGui::IsKeyPressed(ImGuiKey_##KEY)) {  \
     gb.joypad_.ACTION(true);                  \
@@ -272,11 +271,6 @@ int main(int argc, char* argv[]) {
       DEF_KEY(K, B)
       DEF_KEY(Enter, Start)
       DEF_KEY(Space, Select)
-
-      ImGui::Text("Joypad=%x", gb.joypad_.get(0xff00));
-      ImGui::Text("Select=%x", gb.joypad_.select_);
-      ImGui::Text("Direction=%x", gb.joypad_.direction_);
-      ImGui::End();
     }
 
     // Rendering
