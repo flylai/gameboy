@@ -55,7 +55,6 @@ add_executable(gameboy
 add_executable(gb_test
         ${SRC_DIR}/test/run_tests.cpp
         ${SRC_DIR}/test/test_set.cpp
-        ${SRC_DIR}/test/circle_buffer_test.cpp
         ${GB_HEADERS}
         ${GB_SRCS}
 )
