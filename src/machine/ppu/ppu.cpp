@@ -58,8 +58,6 @@ void PPU::verticalBlank() {
     dots_ = 0;
     increaseLY();
     if (ppu_reg_.LY() == 154) {
-      // switch mode from VBlank to OAM scan also triggers LCD STAT
-      memory_bus_->if_.irq(InterruptType::kLCDSTAT);
       ppu_reg_.mode(PPURegister::PPUMode::kOAM_SCAN);
       ppu_reg_.LY(0);
       fetcher_window_line_ = 0;
