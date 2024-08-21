@@ -91,11 +91,13 @@ bool updateTileMap(GameBoy& gb, GLuint* out_texture, int* out_width, int* out_he
   return true;
 }
 
-bool updateGameboyLCD(GameBoy& gb, GLuint* out_texture, int* out_width, int* out_height) {
-  constexpr u32 WIDTH  = 160;
-  constexpr u32 HEIGHT = 144;
+bool updateGameboyLCD(GameBoy& gb, GLuint* out_texture, int* out_width, int* out_height, u8 scale) {
+  constexpr u32 WIDTH     = 160;
+  constexpr u32 HEIGHT    = 144;
+  const u32 SCALED_WIDTH  = WIDTH * scale;
+  const u32 SCALED_HEIGHT = HEIGHT * scale;
 
-  static bool init     = false;
+  static bool init        = false;
   static GLuint image_texture;
   if (!init) {
     init = true;
@@ -108,12 +110,27 @@ bool updateGameboyLCD(GameBoy& gb, GLuint* out_texture, int* out_width, int* out
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WIDTH, HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               gb.ppu_.lcdData().get());
+  const u8* original_data = gb.ppu_.lcdData().get();
+  std::vector<u8> scaled_data(SCALED_WIDTH * SCALED_HEIGHT * 4);
+
+  for (u32 y = 0; y < HEIGHT; ++y) {
+    for (u32 x = 0; x < WIDTH; ++x) {
+      u32 src_index = (y * WIDTH + x) * 4;
+      for (u32 dy = 0; dy < scale; ++dy) {
+        for (u32 dx = 0; dx < scale; ++dx) {
+          u32 dst_index = ((y * scale + dy) * SCALED_WIDTH + (x * scale + dx)) * 4;
+          std::copy(original_data + src_index, original_data + src_index + 4, scaled_data.data() + dst_index);
+        }
+      }
+    }
+  }
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCALED_WIDTH, SCALED_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+               scaled_data.data());
 
   *out_texture = image_texture;
-  *out_width   = WIDTH;
-  *out_height  = HEIGHT;
+  *out_width   = SCALED_WIDTH;
+  *out_height  = SCALED_HEIGHT;
   return true;
 }
 
@@ -230,26 +247,28 @@ int main(int argc, char* argv[]) {
     ImGui::NewFrame();
 
     {
-      int my_image_width      = 0;
-      int my_image_height     = 0;
-      GLuint my_image_texture = 0;
+      int tile_texture_width  = 0;
+      int tile_texture_height = 0;
+      GLuint tile_texture_id  = 0;
       ImGui::Begin("Tile Map");
-      updateTileMap(gb, &my_image_texture, &my_image_width, &my_image_height);
-      ImGui::Text("pointer = %x", my_image_texture);
-      ImGui::Text("size = %d x %d", my_image_width, my_image_height);
-      ImGui::Image((void*) (intptr_t) my_image_texture, ImVec2(my_image_width, my_image_height));
+      updateTileMap(gb, &tile_texture_id, &tile_texture_width, &tile_texture_height);
+      ImGui::Text("pointer = %x", tile_texture_id);
+      ImGui::Text("size = %d x %d", tile_texture_width, tile_texture_height);
+      ImGui::Image((void*) (intptr_t) tile_texture_id, ImVec2(tile_texture_width, tile_texture_height));
       ImGui::End();
     }
 
     {
-      int my_image_width      = 0;
-      int my_image_height     = 0;
-      GLuint my_image_texture = 0;
+      int game_texture_width  = 0;
+      int game_texture_height = 0;
+      static int scale        = 1;
+      GLuint game_texture_id  = 0;
       ImGui::Begin("Game");
-      updateGameboyLCD(gb, &my_image_texture, &my_image_width, &my_image_height);
-      ImGui::Text("pointer = %x", my_image_texture);
-      ImGui::Text("size = %d x %d", my_image_width, my_image_height);
-      ImGui::Image((void*) (intptr_t) my_image_texture, ImVec2(my_image_width, my_image_height));
+      updateGameboyLCD(gb, &game_texture_id, &game_texture_width, &game_texture_height, scale);
+      ImGui::Text("pointer = %x", game_texture_id);
+      ImGui::Text("size = %d x %d", game_texture_width, game_texture_height);
+      ImGui::SliderInt("Scale", &scale, 1, 16);
+      ImGui::Image((void*) (intptr_t) game_texture_id, ImVec2(game_texture_width, game_texture_height));
       ImGui::End();
     }
     //  Joypad status
