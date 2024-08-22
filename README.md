@@ -1,6 +1,6 @@
 # Google Test Report
 
-Commit: [82540337d22747ee5a8d97a5ab33282c1ee16974](https://github.com/flylai/gameboy/commit/82540337d22747ee5a8d97a5ab33282c1ee16974)
+Commit: [42f55cde6964cfc0aef698c2395ebcc9040c1876](https://github.com/flylai/gameboy/commit/42f55cde6964cfc0aef698c2395ebcc9040c1876)
 
 ## Suite: gb_test_roms_cpu_instrs/GBTest
 - ✅ **Test**: ../tests/gb-test-roms/cpu_instrs/cpu_instrs.gb
