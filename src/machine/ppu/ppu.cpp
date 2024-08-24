@@ -47,6 +47,7 @@ void PPU::horizontalBlank() {
     if (ppu_reg_.LY() == 144) {
       memory_bus_->if_.irq(InterruptType::kVBLANK);
       ppu_reg_.mode(PPURegister::PPUMode::kVERTICAL_BLANK);
+      lcd_data_.switchBuffer();
     } else {
       ppu_reg_.mode(PPURegister::PPUMode::kOAM_SCAN);
     }

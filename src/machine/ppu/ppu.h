@@ -14,12 +14,17 @@ class MemoryBus;
 
 class LCDData {
 public:
-  u8 *get() { return ram_; }
+  constexpr static u32 BUFFER_SIZE = 160 * 144 * 4 /*rgba*/;
 
-  const u8 *get() const { return ram_; }
+  u8 *get() { return ram_ + BUFFER_SIZE * buffer_index; }
+
+  const u8 *get() const { return ram_ + BUFFER_SIZE * !buffer_index; }
+
+  void switchBuffer() { buffer_index = !buffer_index; }
 
 private:
-  u8 ram_[160 * 144 * 4 /*rgba*/];
+  u8 buffer_index{};
+  u8 ram_[BUFFER_SIZE * 2 /*double buffer*/]{};
 };
 
 class PPU : public MemoryAccessor {
