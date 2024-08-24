@@ -81,10 +81,8 @@ void PPU::drawingPixels() {
       return;
     }
 
-    if (objectEnable()) {
-      fetchSprite();
-    }
 
+    std::fill(std::begin(scanline_rendered_), std::end(scanline_rendered_), 0);
     for (fetcher_x_ = 0; fetcher_x_ < 160; fetcher_x_++) {
       background_pixel_.reset();
       window_pixel_.reset();
@@ -97,9 +95,11 @@ void PPU::drawingPixels() {
       u16 window_addr = fetchWindowTile();
       fetchWindowOrBackgroundTileData(window_addr, true);
 
-      fetchSpriteTileData();
-
       mixPixel();
+    }
+    if (objectEnable()) {
+      fetchSprite();
+      fetchAndDrawSpriteTileData();
     }
   }
 }
@@ -139,11 +139,11 @@ void PPU::mixPixel() {
 
   u8 bg_color{};
   u8 win_color{};
-  u8 sprite_color{};
 
   bg_color = applyPalette(background_pixel_.color, background_pixel_.palette);
   setPixel(buffer, x, y, default_palette_[bg_color][0], default_palette_[bg_color][1],
            default_palette_[bg_color][2]);
+  scanline_rendered_[x] = bg_color != 0;
 
   if (fetcher_x_ >= ppu_reg_.WX() - 7   //
       && windowVisible()                //
@@ -152,14 +152,7 @@ void PPU::mixPixel() {
     win_color = applyPalette(window_pixel_.color, window_pixel_.palette);
     setPixel(buffer, x, y, default_palette_[win_color][0], default_palette_[win_color][1],
              default_palette_[win_color][2]);
-  }
-
-  if (objectEnable()) {
-    sprite_color = applyPalette(sprite_pixel_.color, sprite_pixel_.palette);
-    if (sprite_color != 0 && (!sprite_pixel_.bg_priority || (bg_color == 0 || win_color == 0))) {
-      setPixel(buffer, x - 8, y, default_palette_[sprite_color][0], default_palette_[sprite_color][1],
-               default_palette_[sprite_color][2]);
-    }
+    scanline_rendered_[x] = win_color != 0;
   }
 }
 
@@ -236,37 +229,46 @@ void PPU::fetchSprite() {
   }
 }
 
-void PPU::fetchSpriteTileData() {
+void PPU::fetchAndDrawSpriteTileData() {
   u8 sprite_height      = objectHeight();
   u8 sprite_height_mask = sprite_height == 16 ? 0xfe : 0xff;
   for (u8 i = 0; i < 10 && !sprite_buffer_.empty(); i++) {
     ObjectAttribute oa = sprite_buffer_.top();
-    if (fetcher_x_ < oa.x) {
-      break;
-    }
-    u8 y = ppu_reg_.LY() + 16 - oa.y;
+
+    u8 y               = ppu_reg_.LY() + 16 - oa.y;
     if (oa.yFlip()) {
       y = sprite_height - 1 - y;
     }
 
-    u8 x = fetcher_x_ - oa.x;
-    if (oa.xFlip()) {
-      x = 7 - x;
+    for (u8 j = 0; j < 8; j++) {
+      u8 x       = j;
+      u8 pixel_x = oa.x - 8 + j;
+      if (oa.priority() && scanline_rendered_[pixel_x] != 0) {
+        continue;
+      }
+
+      if (oa.xFlip()) {
+        x = 7 - x;
+      }
+
+      u16 tile_data_addr        = 0x8000 + ((oa.tile_index & sprite_height_mask) << 4) + (y << 1);
+      u8 low                    = memory_bus_->get(tile_data_addr);
+      u8 high                   = memory_bus_->get(tile_data_addr + 1);
+
+      u8 color                  = ((low << x >> 7) & 1) | (((high << x >> 7) & 1) << 1);
+
+      sprite_pixel_.color       = color;
+      sprite_pixel_.palette     = oa.dmgPalette() ? ppu_reg_.OBP1() : ppu_reg_.OBP0();
+      sprite_pixel_.bg_priority = oa.priority();
+
+      u8 sprite_color           = applyPalette(sprite_pixel_.color, sprite_pixel_.palette);
+      if (sprite_color) {
+        setPixel(lcd_data_.get(), pixel_x, ppu_reg_.LY(), default_palette_[sprite_color][0],
+                 default_palette_[sprite_color][1], default_palette_[sprite_color][2]);
+      }
     }
 
-    u16 tile_data_addr        = 0x8000 + ((oa.tile_index & sprite_height_mask) << 4) + (y << 1);
-    u8 low                    = memory_bus_->get(tile_data_addr);
-    u8 high                   = memory_bus_->get(tile_data_addr + 1);
-
-    u8 color                  = ((low << x >> 7) & 1) | (((high << x >> 7) & 1) << 1);
-
-    sprite_pixel_.color       = color;
-    sprite_pixel_.palette     = oa.dmgPalette() ? ppu_reg_.OBP1() : ppu_reg_.OBP0();
-    sprite_pixel_.bg_priority = oa.priority();
-
-    if (fetcher_x_ >= oa.x + 8) {
-      sprite_buffer_.pop();
-    }
+    sprite_buffer_.pop();
   }
 }
 

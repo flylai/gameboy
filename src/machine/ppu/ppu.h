@@ -112,7 +112,7 @@ private:
   u16 fetchBackgroundTile();
   void fetchWindowOrBackgroundTileData(u16 addr, bool is_window);
   void fetchSprite();
-  void fetchSpriteTileData();
+  void fetchAndDrawSpriteTileData();
   void mixPixel();
 
   void increaseLY();
@@ -125,6 +125,7 @@ private:
   PPURegister ppu_reg_;
   MemoryBus *memory_bus_{};
   LCDData lcd_data_;
+  u8 scanline_rendered_[160]{};
   std::priority_queue<ObjectAttribute> sprite_buffer_;
   std::vector<ObjectAttribute> fetched_sprites_;
   u8 fetcher_window_line_{};
