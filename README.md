@@ -1,6 +1,6 @@
 # Google Test Report
 
-Commit: [92027072bc4512cf09b16df6979b09204e716176](https://github.com/flylai/gameboy/commit/92027072bc4512cf09b16df6979b09204e716176)
+Commit: [f467bc6fcac2d28f5de44496c30c0dc7f3eda490](https://github.com/flylai/gameboy/commit/f467bc6fcac2d28f5de44496c30c0dc7f3eda490)
 
 ## Suite: gb_test_roms_cpu_instrs/GBTest
 - ✅ **Test**: ../tests/gb-test-roms/cpu_instrs/cpu_instrs.gb
@@ -79,7 +79,7 @@ Commit: [92027072bc4512cf09b16df6979b09204e716176](https://github.com/flylai/gam
 - ❌ **Test**: ../tests/mts/acceptance/timer/tima_write_reloading.gb
 - ❌ **Test**: ../tests/mts/acceptance/timer/tma_write_reloading.gb
 ## Suite: mts_acceptance_root/GBTest
-- ❌ **Test**: ../tests/mts/acceptance/add_sp_e_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/add_sp_e_timing.gb
 - ❌ **Test**: ../tests/mts/acceptance/boot_div-S.gb
 - ❌ **Test**: ../tests/mts/acceptance/boot_div-dmg0.gb
 - ❌ **Test**: ../tests/mts/acceptance/boot_div-dmgABCmgb.gb
@@ -92,9 +92,9 @@ Commit: [92027072bc4512cf09b16df6979b09204e716176](https://github.com/flylai/gam
 - ❌ **Test**: ../tests/mts/acceptance/boot_regs-mgb.gb
 - ❌ **Test**: ../tests/mts/acceptance/boot_regs-sgb.gb
 - ❌ **Test**: ../tests/mts/acceptance/boot_regs-sgb2.gb
-- ❌ **Test**: ../tests/mts/acceptance/call_cc_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/call_cc_timing.gb
 - ❌ **Test**: ../tests/mts/acceptance/call_cc_timing2.gb
-- ❌ **Test**: ../tests/mts/acceptance/call_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/call_timing.gb
 - ❌ **Test**: ../tests/mts/acceptance/call_timing2.gb
 - ❌ **Test**: ../tests/mts/acceptance/di_timing-GS.gb
 - ✅ **Test**: ../tests/mts/acceptance/div_timing.gb
@@ -106,19 +106,19 @@ Commit: [92027072bc4512cf09b16df6979b09204e716176](https://github.com/flylai/gam
 - ❌ **Test**: ../tests/mts/acceptance/halt_ime1_timing2-GS.gb
 - ❌ **Test**: ../tests/mts/acceptance/if_ie_registers.gb
 - ❌ **Test**: ../tests/mts/acceptance/intr_timing.gb
-- ❌ **Test**: ../tests/mts/acceptance/jp_cc_timing.gb
-- ❌ **Test**: ../tests/mts/acceptance/jp_timing.gb
-- ❌ **Test**: ../tests/mts/acceptance/ld_hl_sp_e_timing.gb
-- ❌ **Test**: ../tests/mts/acceptance/oam_dma_restart.gb
+- ✅ **Test**: ../tests/mts/acceptance/jp_cc_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/jp_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/ld_hl_sp_e_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/oam_dma_restart.gb
 - ❌ **Test**: ../tests/mts/acceptance/oam_dma_start.gb
-- ❌ **Test**: ../tests/mts/acceptance/oam_dma_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/oam_dma_timing.gb
 - ✅ **Test**: ../tests/mts/acceptance/pop_timing.gb
 - ❌ **Test**: ../tests/mts/acceptance/push_timing.gb
 - ✅ **Test**: ../tests/mts/acceptance/rapid_di_ei.gb
-- ❌ **Test**: ../tests/mts/acceptance/ret_cc_timing.gb
-- ❌ **Test**: ../tests/mts/acceptance/ret_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/ret_cc_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/ret_timing.gb
 - ❌ **Test**: ../tests/mts/acceptance/reti_intr_timing.gb
-- ❌ **Test**: ../tests/mts/acceptance/reti_timing.gb
+- ✅ **Test**: ../tests/mts/acceptance/reti_timing.gb
 - ❌ **Test**: ../tests/mts/acceptance/rst_timing.gb
 ## Suite: mts_acceptance_oam_dma/GBTest
 - ✅ **Test**: ../tests/mts/acceptance/oam_dma/basic.gb
