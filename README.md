@@ -1,6 +1,6 @@
 # Google Test Report
 
-Commit: [adde0994699d095dbb7f89921f301da34b703b79](https://github.com/flylai/gameboy/commit/adde0994699d095dbb7f89921f301da34b703b79)
+Commit: [92027072bc4512cf09b16df6979b09204e716176](https://github.com/flylai/gameboy/commit/92027072bc4512cf09b16df6979b09204e716176)
 
 ## Suite: gb_test_roms_cpu_instrs/GBTest
 - ✅ **Test**: ../tests/gb-test-roms/cpu_instrs/cpu_instrs.gb
@@ -120,4 +120,7 @@ Commit: [adde0994699d095dbb7f89921f301da34b703b79](https://github.com/flylai/gam
 - ❌ **Test**: ../tests/mts/acceptance/reti_intr_timing.gb
 - ❌ **Test**: ../tests/mts/acceptance/reti_timing.gb
 - ❌ **Test**: ../tests/mts/acceptance/rst_timing.gb
+## Suite: mts_acceptance_oam_dma/GBTest
+- ✅ **Test**: ../tests/mts/acceptance/oam_dma/basic.gb
+- ✅ **Test**: ../tests/mts/acceptance/oam_dma/reg_read.gb
 
