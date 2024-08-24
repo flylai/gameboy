@@ -5,7 +5,8 @@ This is a another Gameboy emulator written in C++.
 All the core components are implemented, including CPU, PPU, APU, and MBCs, with cycle-accurate timing(not highly
 accurate though).
 
-![Super Mario Land](docs/imgs/super_mario_land.gif)
+![Super Mario Land2](docs/imgs/super_mario_land2.gif)
+![Super Mario Land3](docs/imgs/super_mario_land3.gif)
 
 ## Build
 
@@ -52,6 +53,7 @@ cmake --build . --parallel $(nproc)
 ![castlevania](docs/imgs/castlevania.bmp)
 ![super_robot_taisen](docs/imgs/super_robot_taisen.bmp)
 ![game_boy_gallery](docs/imgs/game_boy_gallery.bmp)
+![donkey_kong](docs/imgs/donkey_kong.bmp)
 
 ### Accuracy Tests
 
@@ -59,6 +61,7 @@ cmake --build . --parallel $(nproc)
 ![instr_timing](docs/imgs/instr_timing.bmp)
 ![mem_timing](docs/imgs/mem_timing.bmp)
 ![mem_timing-2](docs/imgs/mem_timing-2.bmp)
+![dmg_acid2](docs/imgs/dmg_acid2.bmp)
 
 ## Tests
 
