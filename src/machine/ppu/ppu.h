@@ -54,16 +54,17 @@ public:
     if (addr == 0xff46) {
       dma_enable_ = true;
       dma_delay_  = 1;
+      dma_offset_ = 0;
     }
     ppu_reg_.set(addr, val);
   }
 
   void tick() {
+    dmaUpdate();
     if (!getBitN(ppu_reg_.LCDC(), 7)) {
       GB_LOG(DEBUG) << "LCD/PPU is off";
       return;
     }
-    dmaUpdate();
     dots_++;
     switch (ppu_reg_.mode()) {
       case PPURegister::PPUMode::kHORIZONTAL_BLANK:

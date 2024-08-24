@@ -156,3 +156,8 @@ INSTANTIATE_TEST_SUITE_P(mts_acceptance_timer, GBTest,
 INSTANTIATE_TEST_SUITE_P(mts_acceptance_root, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/mts/acceptance/", mts_checker, false)),
                          GBTest::ParamToString);
+
+INSTANTIATE_TEST_SUITE_P(mts_acceptance_oam_dma, GBTest,
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/oam_dma", mts_checker,
+                                                         true)),
+                         GBTest::ParamToString);
