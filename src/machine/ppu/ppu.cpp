@@ -6,25 +6,34 @@ namespace gb {
 // https://hacktix.github.io/GBEDG/ppu/
 
 void PPU::dmaUpdate() {
-  if (!dma_enable_) {
-    dma_offset_ = 0;
-    return;
-  }
-  if (dma_delay_) {
-    dma_delay_--;
-    return;
-  }
-
   constexpr u16 OAM_BASE = 0xfe00;
-  u16 dma_base           = memory_bus_->get(0xff46);
 
-  u16 offset             = dma_base * 0x100 + dma_offset_;
+  if (!dma_enable_) {
+    return;
+  }
+
+  if (++dma_timer_ % 4) {
+    return;
+  }
+
+  dma_restarting_ = false;
+  u16 dma_base    = memory_bus_->get(0xff46) * 0x100;
+  u16 offset      = dma_base + dma_offset_;
+
   if (offset > 0xe000) {
     offset &= ~0x2000;
   }
 
-  memory_bus_->set(OAM_BASE + dma_offset_, memory_bus_->get(offset));
-  dma_enable_ = ++dma_offset_ <= 0x9f;
+  if (dma_offset_ <= 0x9f) [[likely]] {
+    memory_bus_->set(OAM_BASE + dma_offset_, memory_bus_->get(offset));
+  }
+
+  dma_offset_++;
+  if (dma_timer_ > 640 + 4 /* delay 1 M cycle */) {
+    dma_enable_ = false;
+    dma_timer_  = 0;
+    dma_offset_ = 0;
+  }
 }
 
 void PPU::increaseLY() {

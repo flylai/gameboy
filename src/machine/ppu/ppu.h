@@ -43,20 +43,35 @@ class PPU : public MemoryAccessor {
   };
 
   u8 fetcher_x_{};
+  u8 fetcher_window_line_{};
   Pixel background_pixel_;
   Pixel window_pixel_;
   Pixel sprite_pixel_;
 
 public:
-  u8 get(u16 addr) const override { return ppu_reg_.get(addr); }
+  u8 get(u16 addr) const override {
+    if (addr >= 0xfe00 && addr <= 0xfe9f) {
+      if (!dmaRunning()) {
+        return oam_.get(addr);
+      }
+      return 0xff;
+    } else {
+      return ppu_reg_.get(addr);
+    }
+  }
 
   void set(u16 addr, u8 val) override {
-    if (addr == 0xff46) {
-      dma_enable_ = true;
-      dma_delay_  = 1;
-      dma_offset_ = 0;
+    if (addr >= 0xfe00 && addr <= 0xfe9f) {
+      oam_.set(addr, val);
+    } else {
+      if (addr == 0xff46) {
+        dma_offset_     = 0;
+        dma_timer_      = 0;
+        dma_restarting_ = dma_enable_;
+        dma_enable_     = true;
+      }
+      ppu_reg_.set(addr, val);
     }
-    ppu_reg_.set(addr, val);
   }
 
   void tick() {
@@ -93,6 +108,9 @@ public:
 
 private:
   void dmaUpdate();
+
+  bool dmaRunning() const { return dma_timer_ > 4 || dma_restarting_; }
+
   void horizontalBlank();
   void verticalBlank();
   void oamScan();
@@ -125,16 +143,16 @@ private:
 
 private:
   bool dma_enable_{};
+  bool dma_restarting_{};
   u16 dma_offset_{};
-  u8 dma_delay_{};
+  u32 dma_timer_{};
 
   PPURegister ppu_reg_;
+  Memory<0xfe00, 0xfe9f> oam_{};
   MemoryBus *memory_bus_{};
   LCDData lcd_data_;
   u8 scanline_rendered_[160]{};
   std::priority_queue<ObjectAttribute> sprite_buffer_;
-  std::vector<ObjectAttribute> fetched_sprites_;
-  u8 fetcher_window_line_{};
   u16 dots_{};
 
   static constexpr u8 default_palette_[][3] = {

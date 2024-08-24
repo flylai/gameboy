@@ -126,7 +126,7 @@ private:
         return &wram_;
       case 0xFE00 ... 0xFE9F:
         // Object attribute memory (OAM)
-        return &oam_;
+        return ppu_;
       case 0xFEA0 ... 0xFEFF:
         // Not Usable Nintendo says use of this area is prohibited.
         goto invalid_addr;
@@ -214,7 +214,6 @@ public:
   mutable Cartridge *cartridge_{};
   mutable WorkRam wram_{};
   mutable Memory<0x8000, 0x9fff> vram_{};
-  mutable Memory<0xfe00, 0xfe9f> oam_{};
 
   mutable Joypad *joypad_{};
   mutable Serial *serial_{};
