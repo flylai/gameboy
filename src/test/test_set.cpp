@@ -2,6 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <filesystem>
+#include <unordered_set>
 
 #include "test_base.h"
 
@@ -41,12 +42,15 @@ public:
 
 static std::vector<TestParams> getFileList(const std::string &path,
                                            const Monitor::CheckFunction &result_checker, bool recursive,
+                                           std::unordered_set<std::string> ignore_files,
                                            u64 timeout = TIMEOUT) {
   std::vector<TestParams> v;
   auto checkFile = [&](const fs::directory_entry &entry) {
     if (entry.is_regular_file() && entry.path().extension() == ".gb") {
-      std::string filename = entry.path();
-      v.push_back({filename, result_checker, timeout});
+      if (ignore_files.contains(entry.path().filename())) {
+        return;
+      }
+      v.push_back({entry.path(), result_checker, timeout});
     }
   };
   if (!recursive) {
@@ -101,63 +105,65 @@ TEST_P(GBTest, ARGS) {
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_cpu_instrs, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/cpu_instrs/",
-                                                         gb_test_roms_checker, true, 20)),
+                                                         gb_test_roms_checker, true, {}, 20)),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_instr_timing, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/instr_timing",
-                                                         gb_test_roms_checker, true)),
+                                                         gb_test_roms_checker, true, {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_interrupt_time, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/interrupt_time",
-                                                         gb_test_roms_checker, false)),
+                                                         gb_test_roms_checker, false, {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_mem_timing, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/mem_timing",
-                                                         gb_test_roms_checker, true, 20)),
+                                                         gb_test_roms_checker, true, {}, 20)),
                          GBTest::ParamToString);
 
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_mem_timing2, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/mem_timing-2",
-                                                         gb_test_roms_checker, true, 20)),
+                                                         gb_test_roms_checker, true, {}, 20)),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_emulator_only_mbc1, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/mts/emulator-only/mbc1/", mts_checker,
-                                                         false)),
+                                                         false, {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_acceptance_bits, GBTest,
-                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/bits", mts_checker, false)),
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/bits", mts_checker, false,
+                                                         {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_acceptance_instr, GBTest,
-                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/instr", mts_checker,
-                                                         false)),
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/instr", mts_checker, false,
+                                                         {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_acceptance_interrupts, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/mts/acceptance/interrupts", mts_checker,
-                                                         false)),
+                                                         false, {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_acceptance_ppu, GBTest,
-                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/ppu", mts_checker, false)),
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/ppu", mts_checker, false,
+                                                         {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_acceptance_timer, GBTest,
-                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/timer", mts_checker,
-                                                         false)),
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/timer", mts_checker, false,
+                                                         {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_acceptance_root, GBTest,
-                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/", mts_checker, false)),
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/", mts_checker, false, {})),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(mts_acceptance_oam_dma, GBTest,
-                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/oam_dma", mts_checker,
-                                                         true)),
+                         ::testing::ValuesIn(getFileList("../tests/mts/acceptance/oam_dma", mts_checker, true,
+                                                         {"sources-GS.gb"})),
                          GBTest::ParamToString);

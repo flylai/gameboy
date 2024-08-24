@@ -3,6 +3,7 @@
 #include "cartridge.h"
 #include "cartridge_header.h"
 #include "mbc1.h"
+#include "nameof.hpp"
 
 namespace gb {
 
@@ -102,7 +103,7 @@ public:
         break;
       default:
       unsupported:
-        GB_LOG(ERROR) << "unsupported cartridge type";
+        GB_LOG(ERROR) << "unsupported cartridge type " << NAMEOF_ENUM(cart_header.type());
     }
     GB_UNREACHABLE();
   }
