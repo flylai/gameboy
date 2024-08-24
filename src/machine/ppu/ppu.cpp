@@ -216,6 +216,7 @@ void PPU::fetchSprite() {
     oa.x          = memory_bus_->get(i + 1);
     oa.tile_index = memory_bus_->get(i + 2);
     oa.attrs      = memory_bus_->get(i + 3);
+    oa.OAM_index  = i & 0xff;
     bool cond     = true;
     // Sprite X-Position must be greater than 0
     cond &= oa.x > 0;
@@ -232,7 +233,8 @@ void PPU::fetchSprite() {
 void PPU::fetchAndDrawSpriteTileData() {
   u8 sprite_height      = objectHeight();
   u8 sprite_height_mask = sprite_height == 16 ? 0xfe : 0xff;
-  for (u8 i = 0; i < 10 && !sprite_buffer_.empty(); i++) {
+
+  for (u8 i = 0; i <= 10 && !sprite_buffer_.empty(); i++) {
     ObjectAttribute oa = sprite_buffer_.top();
 
     u8 y               = ppu_reg_.LY() + 16 - oa.y;
