@@ -1,12 +1,13 @@
+#pragma once
+
 #include "cartridge/cartridge.h"
 #include "cartridge/cartridge_factory.h"
 #include "machine/apu/apu.h"
+#include "machine/apu/miniaudio_wrapper.h"
 #include "machine/cpu/cpu.h"
 #include "machine/cpu/rtc.h"
 #include "machine/cpu/timer.h"
 #include "machine/ppu/ppu.h"
-
-#pragma once
 
 namespace gb {
 
@@ -14,7 +15,9 @@ class GameBoy {
 public:
   ~GameBoy() { delete cartridge_; }
 
-  explicit GameBoy(const std::string &game) : cartridge_(CartridgeFactory::Create(game)) {
+  explicit GameBoy(const std::string& game)
+      : cartridge_(CartridgeFactory::Create(game)),
+        miniaudio_wrapper(this) {
     memory_bus_.timer_     = &timer_;
     memory_bus_.cartridge_ = cartridge_;
     memory_bus_.ppu_       = &ppu_;
@@ -30,9 +33,11 @@ public:
 
     cpu_.reset();
     memory_bus_.reset();
+
+    miniaudio_wrapper.init();
   }
 
-  Cartridge *cartridge_;
+  Cartridge* cartridge_{};
   RTC rtc_;
   Timer timer_;
   CPU cpu_;
@@ -41,5 +46,8 @@ public:
   PPU ppu_;
   Joypad joypad_;
   APU apu_;
+  MiniAudioWrapper miniaudio_wrapper;
 };
+
+
 } // namespace gb

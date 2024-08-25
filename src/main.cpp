@@ -10,10 +10,23 @@
 #endif
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
-// clang-format off
-#define MINIAUDIO_IMPLEMENTATION
-#include "miniaudio.h"
-// clang-format on
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+#include <functional>
+static std::function<void()> MainLoopForEmscriptenP;
+
+static void MainLoopForEmscripten() { MainLoopForEmscriptenP(); }
+
+#define EMSCRIPTEN_MAINLOOP_BEGIN MainLoopForEmscriptenP = [&]()
+#define EMSCRIPTEN_MAINLOOP_END \
+  ;                             \
+  emscripten_set_main_loop(MainLoopForEmscripten, 0, true)
+#else
+#define EMSCRIPTEN_MAINLOOP_BEGIN
+#define EMSCRIPTEN_MAINLOOP_END
+#endif
+
 
 #include <cmath>
 
@@ -134,11 +147,6 @@ bool updateGameboyLCD(GameBoy& gb, GLuint* out_texture, int* out_width, int* out
   return true;
 }
 
-void data_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count) {
-  auto* gb = static_cast<GameBoy*>(device->pUserData);
-  gb->apu_.audioDataCallback(device, output, input, frame_count);
-}
-
 // Main code
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -152,32 +160,6 @@ int main(int argc, char* argv[]) {
   // init gameboy
   GameBoy gb(argv[1]);
   GB_LOG(INFO) << NAMEOF_ENUM(gb.cartridge_->header().type());
-
-  // init miniaudio
-  ma_result result;
-  ma_device_config deviceConfig;
-  ma_device device;
-
-  deviceConfig                   = ma_device_config_init(ma_device_type_playback);
-  deviceConfig.playback.format   = ma_format_s16;
-  deviceConfig.playback.channels = 2;
-  deviceConfig.sampleRate        = ma_standard_sample_rate_44100;
-  deviceConfig.dataCallback      = data_callback;
-  deviceConfig.pUserData         = &gb;
-
-  result                         = ma_device_init(nullptr, &deviceConfig, &device);
-  if (result != MA_SUCCESS) {
-    GB_LOG(INFO) << "Failed to initialize playback device.";
-    return -1;
-  }
-
-  result = ma_device_start(&device);
-  if (result != MA_SUCCESS) {
-    GB_LOG(INFO) << "Failed to start playback device.";
-    ma_device_uninit(&device);
-    return -1;
-  }
-
 
   // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
@@ -222,24 +204,25 @@ int main(int argc, char* argv[]) {
 
   // Setup Platform/Renderer backends
   ImGui_ImplGlfw_InitForOpenGL(window, true);
+#ifdef __EMSCRIPTEN__
+  ImGui_ImplGlfw_InstallEmscriptenCanvasResizeCallback("#canvas");
+#endif
   ImGui_ImplOpenGL3_Init(glsl_version);
 
   // Our state
   ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-  // Main loop
-  auto render_loop   = [&](u64) -> u8 {
-    static u64 last_time = std::chrono::duration_cast<std::chrono::milliseconds>(
-                                   std::chrono::high_resolution_clock::now().time_since_epoch())
-                                   .count();
-    u64 now = std::chrono::duration_cast<std::chrono::milliseconds>(
-                      std::chrono::high_resolution_clock::now().time_since_epoch())
-                      .count();
-    //    if (now - last_time < 30) {
-    //      return 0;
-    //    }
-    last_time = now;
 
+  gb.rtc_.addTask([&]() {
+    if (glfwWindowShouldClose(window)) {
+      gb.rtc_.stop();
+    }
+    return 0;
+  });
+  std::thread t([&]() { gb.rtc_.run(); });
+  t.detach();
+
+  auto render_loop = [&](u64) -> u8 {
     glfwPollEvents();
 
     ImGui_ImplOpenGL3_NewFrame();
@@ -306,24 +289,23 @@ int main(int argc, char* argv[]) {
     return 0;
   };
 
-
-  gb.rtc_.addTask([&]() {
-    if (glfwWindowShouldClose(window)) {
-      gb.rtc_.stop();
-    }
-    return 0;
-  });
-  std::thread t([&]() { gb.rtc_.run(); });
-  t.detach();
-
-
-  while (!glfwWindowShouldClose(window)) {
+  // Main loop
+#ifdef __EMSCRIPTEN__
+  // For an Emscripten build we are disabling file-system access, so let's not attempt to do a fopen() of the imgui.ini file.
+  // You may manually call LoadIniSettingsFromMemory() to load settings from your own storage.
+  io.IniFilename = nullptr;
+  EMSCRIPTEN_MAINLOOP_BEGIN
+#else
+  while (!glfwWindowShouldClose(window))
+#endif
+  {
     render_loop(1);
   }
+#ifdef __EMSCRIPTEN__
+  EMSCRIPTEN_MAINLOOP_END;
+#endif
 
   // Cleanup
-
-  ma_device_uninit(&device);
 
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
@@ -333,4 +315,4 @@ int main(int argc, char* argv[]) {
   glfwTerminate();
 
   return 0;
-};
+}
