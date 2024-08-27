@@ -4,6 +4,7 @@
 
 #include "cartridge_header.h"
 #include "machine/memory/memory_accessor.h"
+#include "nameof.hpp"
 
 namespace gb {
 class Cartridge : public MemoryAccessor {
@@ -26,6 +27,9 @@ public:
     is.read((char*) rom_, rom_size_);
     is.close();
     header_ = CartridgeHeader(rom_);
+    GB_LOG(INFO) << "Game: " << header_.title();
+    GB_LOG(INFO) << "ROM size: " << rom_size_ << " bytes";
+    GB_LOG(INFO) << "Cartridge type: " << NAMEOF_ENUM(header_.type());
   }
 
   virtual ~Cartridge() { free(rom_); }
