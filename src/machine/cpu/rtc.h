@@ -39,7 +39,7 @@ private:
 
   std::vector<TimerTask> tasks_;
   i64 last_update_{};
-  bool stop_{true};
+  std::atomic<bool> stop_{true};
 };
 
 } // namespace gb

@@ -30,3 +30,4 @@ inline static T setBitN(T val, int n) {
 #define GB_ASSERT(COND) assert((COND))
 #define GB_STATIC_ASSERT(COND, MSG) static_assert((COND), MSG)
 #define INLINE __attribute__((always_inline)) inline
+#define GB_API __attribute__((visibility("default")))
