@@ -1,5 +1,6 @@
 #pragma once
 
+#include "common/defs.h"
 #include "machine/memory/memory_accessor.h"
 
 namespace gb {
@@ -10,20 +11,20 @@ class APUGlobalRegister : public Memory<0xFF24, 0xFF26> {
 public:
   explicit APUGlobalRegister(APU* apu) : apu_(apu) {}
 
-  bool audioEnable() const { return getBitN(get(0xFF26), 7); }
+  bool audioEnable() const { return getBitN(get(NR52_BASE), 7); }
 
   bool leftEnable(u8 channel_index) const {
     GB_ASSERT(channel_index >= 1 && channel_index <= 4);
-    return getBitN(get(0xff25), channel_index + 3);
+    return getBitN(get(NR51_BASE), channel_index + 3);
   }
 
   bool rightEnable(u8 channel_index) const {
     GB_ASSERT(channel_index >= 1 && channel_index <= 4);
-    return getBitN(get(0xff25), channel_index - 1);
+    return getBitN(get(NR51_BASE), channel_index - 1);
   }
 
   void set(gb::u16 addr, gb::u8 val) override {
-    if (addr == 0xFF26) {
+    if (addr == NR52_BASE) {
       Memory::set(addr, val & 0xf0);
     } else {
       Memory::set(addr, val);

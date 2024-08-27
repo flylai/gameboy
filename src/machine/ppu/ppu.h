@@ -3,6 +3,7 @@
 #include <array>
 #include <queue>
 
+#include "common/defs.h"
 #include "common/logger.h"
 #include "common/type.h"
 #include "machine/memory/memory_accessor.h"

@@ -1,4 +1,5 @@
 #pragma once
+#include "common/defs.h"
 #include "machine/memory/memory_accessor.h"
 
 namespace gb {
@@ -42,9 +43,9 @@ private:
   void reset() {
     u8 v = ram_[0];
     if (!getBitN(v, 4) && !getBitN(v, 5)) {
-      set(0xff00, 0xff);
+      set(P1_BASE, 0xff);
     } else {
-      set(0xff00, (v & 0x30 /*get bit 4,5*/) | 0xcf /*reset rest bit*/);
+      set(P1_BASE, (v & 0x30 /*get bit 4,5*/) | 0xcf /*reset rest bit*/);
     }
   }
 

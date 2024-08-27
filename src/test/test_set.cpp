@@ -26,7 +26,7 @@ public:
   static std::string ParamToString(const testing::TestParamInfo<TestParams> &info) {
     std::stringstream ss;
     const std::string &path = info.param.path;
-    int pos                 = path.find_last_of('/');
+    size_t pos              = path.find_last_of('/');
     pos++; // skip '/' and if `/` not found, pos = 0
     while (pos < path.size()) {
       if (isalnum(path[pos])) {

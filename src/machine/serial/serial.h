@@ -2,6 +2,7 @@
 
 #include <queue>
 
+#include "common/defs.h"
 #include "common/type.h"
 #include "machine/memory/memory_accessor.h"
 #include "serial_buffer.h"
@@ -18,13 +19,13 @@ public:
 
   void tick();
 
-  void SB(u8 val) { set(0xff01, val); }
+  void SB(u8 val) { set(SB_BASE, val); }
 
-  u8 SB() const { return get(0xff01); }
+  u8 SB() const { return get(SB_BASE); }
 
-  void SC(u8 val) { set(0xff02, val); }
+  void SC(u8 val) { set(SC_BASE, val); }
 
-  u8 SC() const { return get(0xff02); }
+  u8 SC() const { return get(SC_BASE); }
 
   u8 enable() const { return getBitN(SC(), 7); }
 

@@ -1498,7 +1498,7 @@ u8 CPU::update() {
   if (halt()) {
     // https://gbdev.io/pandocs/halt.html#halt-bug
     // todo: if IME() not set but ie/if is set, we need to handle this bug.
-    if (IME() || (memory_bus_->get(0xff0f) & memory_bus_->get(0xffff))) {
+    if (IME() || (memory_bus_->get(IF_BASE) & memory_bus_->get(IE_BASE))) {
       halt(false);
     } else {
       // idle
@@ -1526,7 +1526,7 @@ u8 CPU::handleInterrupt() {
     interrupt_delay_--;
     return 0;
   }
-  u8 interrupt_mask = memory_bus_->get(0xffff) & memory_bus_->get(0xff0f);
+  u8 interrupt_mask = memory_bus_->get(IE_BASE) & memory_bus_->get(IF_BASE);
   if (interrupt_mask == 0) {
     return 0;
   }
@@ -1543,7 +1543,7 @@ u8 CPU::handleInterrupt() {
     if (interrupt_mask & (1 << i)) {
       push16(PC());
       PC(interrupt_table[i]);
-      memory_bus_->set(0xff0f, memory_bus_->get(0xff0f) & ~(1 << i));
+      memory_bus_->set(IF_BASE, memory_bus_->get(IF_BASE) & ~(1 << i));
 
       break;
     }

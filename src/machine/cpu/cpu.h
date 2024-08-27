@@ -23,8 +23,8 @@ public:
     L(0x4d);
     pc_ = 0x100;
     sp_ = 0xfffe;
-    memory_bus_->set(0xff0f, 0xe1);
-    memory_bus_->set(0xffff, 0);
+    memory_bus_->set(IF_BASE, 0xe1);
+    memory_bus_->set(IE_BASE, 0);
   }
 
   u8 update();

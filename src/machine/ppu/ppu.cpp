@@ -6,8 +6,6 @@ namespace gb {
 // https://hacktix.github.io/GBEDG/ppu/
 
 void PPU::dmaUpdate() {
-  constexpr u16 OAM_BASE = 0xfe00;
-
   if (!dma_enable_) {
     return;
   }
@@ -17,10 +15,10 @@ void PPU::dmaUpdate() {
   }
 
   dma_restarting_ = false;
-  u16 dma_base    = memory_bus_->get(0xff46) * 0x100;
+  u16 dma_base    = memory_bus_->get(DMA_BASE) * 0x100;
   u16 offset      = dma_base + dma_offset_;
 
-  if (offset > 0xe000) {
+  if (offset > ECHO_RAM_BASE) {
     offset &= ~0x2000;
   }
 

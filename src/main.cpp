@@ -1,5 +1,6 @@
 #include <cstdio>
 
+#include "common/defs.h"
 #include "common/type.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -65,7 +66,6 @@ bool updateTileMap(GameBoy gb, GLuint* out_texture, int* out_width, int* out_hei
     return false;
   }
   auto* gameboy                     = (gb::GameBoy*) gb;
-  constexpr gb::u16 VRAM_BASE       = 0x8000;
   constexpr gb::u16 MAX_TILE_COUNT  = (0x97ff - 0x8000 + 1) / 16;
   constexpr gb::u16 TILE_PER_ROW    = 16;
   constexpr gb::u16 TILE_PER_COL    = MAX_TILE_COUNT / 16;
@@ -74,14 +74,14 @@ bool updateTileMap(GameBoy gb, GLuint* out_texture, int* out_width, int* out_hei
   gb::u8 pixels[WIDTH * HEIGHT * 3] = {0};
   gb::u16 tile_idx{};
 
-  for (gb::u16 addr = VRAM_BASE; addr < 0x97ff; addr += 16) {
+  for (gb::u16 addr = gb::VRAM_BASE; addr < 0x97ff; addr += 16) {
     for (gb::u8 i = 0; i < 8; i++) {
       // 3 means RGB,
       gb::u32 offset = (tile_idx % 16) * 8 * 3              // x offset
                        + ((tile_idx / 16) * 8) * 16 * 8 * 3 // y offset
               ;
-      gb::u16 hi = gameboy->memory_bus_.get(VRAM_BASE + tile_idx * 16 + i * 2);
-      gb::u16 lo = gameboy->memory_bus_.get(VRAM_BASE + tile_idx * 16 + i * 2 + 1);
+      gb::u16 hi = gameboy->memory_bus_.get(gb::VRAM_BASE + tile_idx * 16 + i * 2);
+      gb::u16 lo = gameboy->memory_bus_.get(gb::VRAM_BASE + tile_idx * 16 + i * 2 + 1);
       decode_tile(hi << 8 | lo, pixels + offset + i * 16 * 8 * 3);
     }
     tile_idx++;
