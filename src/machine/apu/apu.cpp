@@ -108,7 +108,7 @@ u8 APU::get(u16 addr) const {
     case 0xff30 ... 0xff3f:
       return channel3_.get(addr);
     default:
-      GB_UNREACHABLE();
+      return 0xff;
   }
 }
 
@@ -131,6 +131,10 @@ void APU::set(u16 addr, u8 val) {
       break;
     case 0xff30 ... 0xff3f:
       channel3_.set(addr, val);
+      break;
+    case 0xff15:
+    case 0xff1f:
+      // some ROM access this register, WHY??
       break;
     default:
       GB_UNREACHABLE();
