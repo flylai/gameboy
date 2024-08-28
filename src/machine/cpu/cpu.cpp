@@ -10,22 +10,13 @@ namespace gb {
 // https://gbdev.io/gb-opcodes//optables/
 // https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7
 
-struct Instruction {
-  static constexpr u16 OFFSET = 0xff00;
+static constexpr u16 OFFSET = 0xff00;
 
-  Instruction(const std::string &name, u8 op, u8 bytes) //
-      : name(name),                                     //
-        op(op),                                         //
-        bytes(bytes) {}
-
-  const std::string name;
-  const u8 op{};
-  const u8 bytes{};
-};
 
 #define DEF_INST(NAME, OP, BYTES, CYCLE)       \
-  struct _##OP : Instruction {                 \
-    _##OP() : Instruction(#NAME, OP, BYTES) {} \
+  struct _##OP {                               \
+    static const char *name() { return NAME; } \
+    static u8 size() { return BYTES; }         \
     static u8 update(CPU *cpu) {               \
       u8 cycle             = (CYCLE);          \
       cpu->timingChecker() = 0;
@@ -104,84 +95,91 @@ for (let op in unprefixed) {
   let op_name = obj["mnemonic"];
   let str = op_name;
   for (let operand in obj['operands']) {
-    str += "_"
+    str += " "
     if (!obj['operands'][operand]['immediate']) {
-      str += "x" + obj['operands'][operand]['name'] + "x";
+      str += "[" + obj['operands'][operand]['name']
+      if (obj['operands'][operand]['increment']) {
+        str += "+";
+      }
+      if (obj['operands'][operand]['decrement']) {
+        str += "-";
+      }
+      str += "]";
     } else {
       str += obj['operands'][operand]['name'];
     }
   }
   let flags = obj["flags"];
-  str += "_" + (flags['Z'] == '-' ? "x" : flags['Z']);
-  str += "_" + (flags['N'] == '-' ? "x" : flags['N']);
-  str += "_" + (flags['H'] == '-' ? "x" : flags['H']);
-  str += "_" + (flags['C'] == '-' ? "x" : flags['C']);
+  // str += "_" + (flags['Z'] == '-' ? "x" : flags['Z']);
+  // str += "_" + (flags['N'] == '-' ? "x" : flags['N']);
+  // str += "_" + (flags['H'] == '-' ? "x" : flags['H']);
+  // str += "_" + (flags['C'] == '-' ? "x" : flags['C']);
   str += "," + op + "," + obj["bytes"] + "," + obj["cycles"].at(-1);
   console.log(str)
 }
 */
 
-DEF_INST(NOP_x_x_x_x, 0x00, 1, 4)
+DEF_INST("NOP", 0x00, 1, 4)
 DEF_INST_END
 
-DEF_INST(LD_BC_n16_x_x_x_x, 0x01, 3, 12)
+DEF_INST("LD BC,n16", 0x01, 3, 12)
 BCWithoutTick(imm16());
 DEF_INST_END
 
-DEF_INST(LD_xBCx_A_x_x_x_x, 0x02, 1, 8)
+DEF_INST("LD [BC],A", 0x02, 1, 8)
 set(BC(), A());
 DEF_INST_END
 
-DEF_INST(INC_BC_x_x_x_x, 0x03, 1, 8)
+DEF_INST("INC BC", 0x03, 1, 8)
 BC(BC() + 1);
 DEF_INST_END
 
-DEF_INST(INC_B_Z_0_H_x, 0x04, 1, 4)
+DEF_INST("INC B", 0x04, 1, 4)
 B(inc8(B()));
 DEF_INST_END
 
-DEF_INST(DEC_B_Z_1_H_x, 0x05, 1, 4)
+DEF_INST("DEC B", 0x05, 1, 4)
 B(dec8(B()));
 DEF_INST_END
 
-DEF_INST(LD_B_n8_x_x_x_x, 0x06, 2, 8)
+DEF_INST("LD B,n8", 0x06, 2, 8)
 B(imm8());
 DEF_INST_END
 
-DEF_INST(RLCA_0_0_0_C, 0x07, 1, 4)
+DEF_INST("RLCA", 0x07, 1, 4)
 A(rlc8(A()));
 zf(0);
 DEF_INST_END
 
-DEF_INST(LD_xa16x_SP_x_x_x_x, 0x08, 3, 20)
+DEF_INST("LD [a16],SP", 0x08, 3, 20)
 set16(imm16(), SP());
 DEF_INST_END
 
-DEF_INST(ADD_HL_BC_x_0_H_C, 0x09, 1, 8)
+DEF_INST("ADD HL,BC", 0x09, 1, 8)
 HL(addHL(BC()));
 DEF_INST_END
 
-DEF_INST(LD_A_xBCx_x_x_x_x, 0x0A, 1, 8)
+DEF_INST("LD A,[BC]", 0x0A, 1, 8)
 A(get(BC()));
 DEF_INST_END
 
-DEF_INST(DEC_BC_x_x_x_x, 0x0B, 1, 8)
+DEF_INST("DEC BC", 0x0B, 1, 8)
 BC(BC() - 1);
 DEF_INST_END
 
-DEF_INST(INC_C_Z_0_H_x, 0x0C, 1, 4)
+DEF_INST("INC C", 0x0C, 1, 4)
 C(inc8(C()));
 DEF_INST_END
 
-DEF_INST(DEC_C_Z_1_H_x, 0x0D, 1, 4)
+DEF_INST("DEC C", 0x0D, 1, 4)
 C(dec8(C()));
 DEF_INST_END
 
-DEF_INST(LD_C_n8_x_x_x_x, 0x0E, 2, 8)
+DEF_INST("LD C,n8", 0x0E, 2, 8)
 C(imm8());
 DEF_INST_END
 
-DEF_INST(RRCA_0_0_0_C, 0x0F, 1, 4)
+DEF_INST("RRCA", 0x0F, 1, 4)
 zf(0);
 nf(0);
 hf(0);
@@ -189,35 +187,35 @@ cf(A() & 0x1);
 A(A() >> 1 | ((A() & 0x7f) << 7));
 DEF_INST_END
 
-DEF_INST(STOP_n8_x_x_x_x, 0x10, 2, 4)
+DEF_INST("STOP n8", 0x10, 2, 4)
 // nothing to do.
 DEF_INST_END
 
-DEF_INST(LD_DE_n16_x_x_x_x, 0x11, 3, 12)
+DEF_INST("LD DE,n16", 0x11, 3, 12)
 DEWithoutTick(imm16());
 DEF_INST_END
 
-DEF_INST(LD_xDEx_A_x_x_x_x, 0x12, 1, 8)
+DEF_INST("LD [DE],A", 0x12, 1, 8)
 set(DE(), A());
 DEF_INST_END
 
-DEF_INST(INC_DE_x_x_x_x, 0x13, 1, 8)
+DEF_INST("INC DE", 0x13, 1, 8)
 DE(DE() + 1);
 DEF_INST_END
 
-DEF_INST(INC_D_Z_0_H_x, 0x14, 1, 4)
+DEF_INST("INC D", 0x14, 1, 4)
 D(inc8(D()));
 DEF_INST_END
 
-DEF_INST(DEC_D_Z_1_H_x, 0x15, 1, 4)
+DEF_INST("DEC D", 0x15, 1, 4)
 D(dec8(D()));
 DEF_INST_END
 
-DEF_INST(LD_D_n8_x_x_x_x, 0x16, 2, 8)
+DEF_INST("LD D,n8", 0x16, 2, 8)
 D(imm8());
 DEF_INST_END
 
-DEF_INST(RLA_0_0_0_C, 0x17, 1, 4)
+DEF_INST("RLA", 0x17, 1, 4)
 zf(0);
 nf(0);
 hf(0);
@@ -226,40 +224,40 @@ cf(A() >> 7);
 A(A() << 1 | c);
 DEF_INST_END
 
-DEF_INST(JR_e8_x_x_x_x, 0x18, 2, 12)
+DEF_INST("JR e8", 0x18, 2, 12)
 jr(imm8());
 DEF_INST_END
 
-DEF_INST(ADD_HL_DE_x_0_H_C, 0x19, 1, 8)
+DEF_INST("ADD HL,DE", 0x19, 1, 8)
 HL(addHL(DE()));
 DEF_INST_END
 
-DEF_INST(LD_A_xDEx_x_x_x_x, 0x1A, 1, 8)
+DEF_INST("LD A,[DE]", 0x1A, 1, 8)
 A(get(DE()));
 DEF_INST_END
 
-DEF_INST(DEC_DE_x_x_x_x, 0x1B, 1, 8)
+DEF_INST("DEC DE", 0x1B, 1, 8)
 DE(DE() - 1);
 DEF_INST_END
 
-DEF_INST(INC_E_Z_0_H_x, 0x1C, 1, 4)
+DEF_INST("INC E", 0x1C, 1, 4)
 E(inc8(E()));
 DEF_INST_END
 
-DEF_INST(DEC_E_Z_1_H_x, 0x1D, 1, 4)
+DEF_INST("DEC E", 0x1D, 1, 4)
 E(dec8(E()));
 DEF_INST_END
 
-DEF_INST(LD_E_n8_x_x_x_x, 0x1E, 2, 8)
+DEF_INST("LD E,n8", 0x1E, 2, 8)
 E(imm8());
 DEF_INST_END
 
-DEF_INST(RRA_0_0_0_C, 0x1F, 1, 4)
+DEF_INST("RRA", 0x1F, 1, 4)
 A(rr8(A()));
 zf(0);
 DEF_INST_END
 
-DEF_INST(JR_NZ_e8_x_x_x_x, 0x20, 2, 8)
+DEF_INST("JR NZ,e8", 0x20, 2, 8)
 u8 target = imm8();
 if (!zf()) {
   jr(target);
@@ -267,32 +265,32 @@ if (!zf()) {
 }
 DEF_INST_END
 
-DEF_INST(LD_HL_n16_x_x_x_x, 0x21, 3, 12)
+DEF_INST("LD HL,n16", 0x21, 3, 12)
 HLWithoutTick(imm16());
 DEF_INST_END
 
-DEF_INST(LD_xHLx_A_x_x_x_x, 0x22, 1, 8)
+DEF_INST("LD [HL+],A", 0x22, 1, 8)
 set(HL(), A());
 HLWithoutTick(HL() + 1);
 DEF_INST_END
 
-DEF_INST(INC_HL_x_x_x_x, 0x23, 1, 8)
+DEF_INST("INC HL", 0x23, 1, 8)
 HL(HL() + 1);
 DEF_INST_END
 
-DEF_INST(INC_H_Z_0_H_x, 0x24, 1, 4)
+DEF_INST("INC H", 0x24, 1, 4)
 H(inc8(H()));
 DEF_INST_END
 
-DEF_INST(DEC_H_Z_1_H_x, 0x25, 1, 4)
+DEF_INST("DEC H", 0x25, 1, 4)
 H(dec8(H()));
 DEF_INST_END
 
-DEF_INST(LD_H_n8_x_x_x_x, 0x26, 2, 8)
+DEF_INST("LD H,n8", 0x26, 2, 8)
 H(imm8());
 DEF_INST_END
 
-DEF_INST(DAA_Z_x_0_C, 0x27, 1, 4)
+DEF_INST("DAA", 0x27, 1, 4)
 u8 a = A();
 u8 v = cf() ? 0x60 : 0;
 if (hf()) {
@@ -315,7 +313,7 @@ zf(a == 0x0);
 A(a);
 DEF_INST_END
 
-DEF_INST(JR_Z_e8_x_x_x_x, 0x28, 2, 8)
+DEF_INST("JR Z,e8", 0x28, 2, 8)
 u8 target = imm8();
 if (zf()) {
   jr(target);
@@ -323,38 +321,38 @@ if (zf()) {
 }
 DEF_INST_END
 
-DEF_INST(ADD_HL_HL_x_0_H_C, 0x29, 1, 8)
+DEF_INST("ADD HL,HL", 0x29, 1, 8)
 HL(addHL(HL()));
 DEF_INST_END
 
-DEF_INST(LD_A_xHLx_x_x_x_x, 0x2A, 1, 8)
+DEF_INST("LD A,[HL+]", 0x2A, 1, 8)
 A(get(HL()));
 HLWithoutTick(HL() + 1);
 DEF_INST_END
 
-DEF_INST(DEC_HL_x_x_x_x, 0x2B, 1, 8)
+DEF_INST("DEC HL", 0x2B, 1, 8)
 HL(HL() - 1);
 DEF_INST_END
 
-DEF_INST(INC_L_Z_0_H_x, 0x2C, 1, 4)
+DEF_INST("INC L", 0x2C, 1, 4)
 L(inc8(L()));
 DEF_INST_END
 
-DEF_INST(DEC_L_Z_1_H_x, 0x2D, 1, 4)
+DEF_INST("DEC L", 0x2D, 1, 4)
 L(dec8(L()));
 DEF_INST_END
 
-DEF_INST(LD_L_n8_x_x_x_x, 0x2E, 2, 8)
+DEF_INST("LD L,n8", 0x2E, 2, 8)
 L(imm8());
 DEF_INST_END
 
-DEF_INST(CPL_x_1_1_x, 0x2F, 1, 4)
+DEF_INST("CPL", 0x2F, 1, 4)
 nf(1);
 hf(1);
 A(~A());
 DEF_INST_END
 
-DEF_INST(JR_NC_e8_x_x_x_x, 0x30, 2, 8)
+DEF_INST("JR NC,e8", 0x30, 2, 8)
 u8 target = imm8();
 if (!cf()) {
   jr(target);
@@ -362,38 +360,38 @@ if (!cf()) {
 }
 DEF_INST_END
 
-DEF_INST(LD_SP_n16_x_x_x_x, 0x31, 3, 12)
+DEF_INST("LD SP,n16", 0x31, 3, 12)
 SPWithoutTick(imm16());
 DEF_INST_END
 
-DEF_INST(LD_xHLx_A_x_x_x_x, 0x32, 1, 8)
+DEF_INST("LD [HL-],A", 0x32, 1, 8)
 set(HL(), A());
 HLWithoutTick(HL() - 1);
 DEF_INST_END
 
-DEF_INST(INC_SP_x_x_x_x, 0x33, 1, 8)
+DEF_INST("INC SP", 0x33, 1, 8)
 SP(SP() + 1);
 DEF_INST_END
 
-DEF_INST(INC_xHLx_Z_0_H_x, 0x34, 1, 12)
+DEF_INST("INC [HL]", 0x34, 1, 12)
 set(HL(), inc8(get(HL())));
 DEF_INST_END
 
-DEF_INST(DEC_xHLx_Z_1_H_x, 0x35, 1, 12)
+DEF_INST("DEC [HL]", 0x35, 1, 12)
 set(HL(), dec8(get(HL())));
 DEF_INST_END
 
-DEF_INST(LD_xHLx_n8_x_x_x_x, 0x36, 2, 12)
+DEF_INST("LD [HL],n8", 0x36, 2, 12)
 set(HL(), imm8());
 DEF_INST_END
 
-DEF_INST(SCF_x_0_0_1, 0x37, 1, 4)
+DEF_INST("SCF", 0x37, 1, 4)
 nf(0);
 hf(0);
 cf(1);
 DEF_INST_END
 
-DEF_INST(JR_C_e8_x_x_x_x, 0x38, 2, 8)
+DEF_INST("JR C,e8", 0x38, 2, 8)
 u8 target = imm8();
 if (cf()) {
   jr(target);
@@ -401,554 +399,554 @@ if (cf()) {
 }
 DEF_INST_END
 
-DEF_INST(ADD_HL_SP_x_0_H_C, 0x39, 1, 8)
+DEF_INST("ADD HL,SP", 0x39, 1, 8)
 HL(addHL(SP()));
 DEF_INST_END
 
-DEF_INST(LD_A_xHLx_x_x_x_x, 0x3A, 1, 8)
+DEF_INST("LD A,[HL-]", 0x3A, 1, 8)
 A(get(HL()));
 HLWithoutTick(HL() - 1);
 DEF_INST_END
 
-DEF_INST(DEC_SP_x_x_x_x, 0x3B, 1, 8)
+DEF_INST("DEC SP", 0x3B, 1, 8)
 SP(SP() - 1);
 DEF_INST_END
 
-DEF_INST(INC_A_Z_0_H_x, 0x3C, 1, 4)
+DEF_INST("INC A", 0x3C, 1, 4)
 A(inc8(A()));
 DEF_INST_END
 
-DEF_INST(DEC_A_Z_1_H_x, 0x3D, 1, 4)
+DEF_INST("DEC A", 0x3D, 1, 4)
 A(dec8(A()));
 DEF_INST_END
 
-DEF_INST(LD_A_n8_x_x_x_x, 0x3E, 2, 8)
+DEF_INST("LD A,n8", 0x3E, 2, 8)
 A(imm8());
 DEF_INST_END
 
-DEF_INST(CCF_x_0_0_C, 0x3F, 1, 4)
+DEF_INST("CCF", 0x3F, 1, 4)
 nf(0);
 hf(0);
 cf(!cf());
 DEF_INST_END
 
-DEF_INST(LD_B_B_x_x_x_x, 0x40, 1, 4)
+DEF_INST("LD B,B", 0x40, 1, 4)
 // LD B B
 // nothing to do.
 DEF_INST_END
 
-DEF_INST(LD_B_C_x_x_x_x, 0x41, 1, 4)
+DEF_INST("LD B,C", 0x41, 1, 4)
 B(C());
 DEF_INST_END
 
-DEF_INST(LD_B_D_x_x_x_x, 0x42, 1, 4)
+DEF_INST("LD B,D", 0x42, 1, 4)
 B(D());
 DEF_INST_END
 
-DEF_INST(LD_B_E_x_x_x_x, 0x43, 1, 4)
+DEF_INST("LD B,E", 0x43, 1, 4)
 B(E());
 DEF_INST_END
 
-DEF_INST(LD_B_H_x_x_x_x, 0x44, 1, 4)
+DEF_INST("LD B,H", 0x44, 1, 4)
 B(H());
 DEF_INST_END
 
-DEF_INST(LD_B_L_x_x_x_x, 0x45, 1, 4)
+DEF_INST("LD B,L", 0x45, 1, 4)
 B(L());
 DEF_INST_END
 
-DEF_INST(LD_B_xHLx_x_x_x_x, 0x46, 1, 8)
+DEF_INST("LD B,[HL]", 0x46, 1, 8)
 B(get(HL()));
 DEF_INST_END
 
-DEF_INST(LD_B_A_x_x_x_x, 0x47, 1, 4)
+DEF_INST("LD B,A", 0x47, 1, 4)
 B(A());
 DEF_INST_END
 
-DEF_INST(LD_C_B_x_x_x_x, 0x48, 1, 4)
+DEF_INST("LD C,B", 0x48, 1, 4)
 C(B());
 DEF_INST_END
 
-DEF_INST(LD_C_C_x_x_x_x, 0x49, 1, 4)
+DEF_INST("LD C,C", 0x49, 1, 4)
 // LD C C
 // nothing to do
 DEF_INST_END
 
-DEF_INST(LD_C_D_x_x_x_x, 0x4A, 1, 4)
+DEF_INST("LD C,D", 0x4A, 1, 4)
 C(D());
 DEF_INST_END
 
-DEF_INST(LD_C_E_x_x_x_x, 0x4B, 1, 4)
+DEF_INST("LD C,E", 0x4B, 1, 4)
 C(E());
 DEF_INST_END
 
-DEF_INST(LD_C_H_x_x_x_x, 0x4C, 1, 4)
+DEF_INST("LD C,H", 0x4C, 1, 4)
 C(H());
 DEF_INST_END
 
-DEF_INST(LD_C_L_x_x_x_x, 0x4D, 1, 4)
+DEF_INST("LD C,L", 0x4D, 1, 4)
 C(L());
 DEF_INST_END
 
-DEF_INST(LD_C_xHLx_x_x_x_x, 0x4E, 1, 8)
+DEF_INST("LD C,[HL]", 0x4E, 1, 8)
 C(get(HL()));
 DEF_INST_END
 
-DEF_INST(LD_C_A_x_x_x_x, 0x4F, 1, 4)
+DEF_INST("LD C,A", 0x4F, 1, 4)
 C(A());
 DEF_INST_END
 
-DEF_INST(LD_D_B_x_x_x_x, 0x50, 1, 4)
+DEF_INST("LD D,B", 0x50, 1, 4)
 D(B());
 DEF_INST_END
 
-DEF_INST(LD_D_C_x_x_x_x, 0x51, 1, 4)
+DEF_INST("LD D,C", 0x51, 1, 4)
 D(C());
 DEF_INST_END
 
-DEF_INST(LD_D_D_x_x_x_x, 0x52, 1, 4)
+DEF_INST("LD D,D", 0x52, 1, 4)
 D(D());
 DEF_INST_END
 
-DEF_INST(LD_D_E_x_x_x_x, 0x53, 1, 4)
+DEF_INST("LD D,E", 0x53, 1, 4)
 D(E());
 DEF_INST_END
 
-DEF_INST(LD_D_H_x_x_x_x, 0x54, 1, 4)
+DEF_INST("LD D,H", 0x54, 1, 4)
 D(H());
 DEF_INST_END
 
-DEF_INST(LD_D_L_x_x_x_x, 0x55, 1, 4)
+DEF_INST("LD D,L", 0x55, 1, 4)
 D(L());
 DEF_INST_END
 
-DEF_INST(LD_D_xHLx_x_x_x_x, 0x56, 1, 8)
+DEF_INST("LD D,[HL]", 0x56, 1, 8)
 D(get(HL()));
 DEF_INST_END
 
-DEF_INST(LD_D_A_x_x_x_x, 0x57, 1, 4)
+DEF_INST("LD D,A", 0x57, 1, 4)
 D(A());
 DEF_INST_END
 
-DEF_INST(LD_E_B_x_x_x_x, 0x58, 1, 4)
+DEF_INST("LD E,B", 0x58, 1, 4)
 E(B());
 DEF_INST_END
 
-DEF_INST(LD_E_C_x_x_x_x, 0x59, 1, 4)
+DEF_INST("LD E,C", 0x59, 1, 4)
 E(C());
 DEF_INST_END
 
-DEF_INST(LD_E_D_x_x_x_x, 0x5A, 1, 4)
+DEF_INST("LD E,D", 0x5A, 1, 4)
 E(D());
 DEF_INST_END
 
-DEF_INST(LD_E_E_x_x_x_x, 0x5B, 1, 4)
+DEF_INST("LD E,E", 0x5B, 1, 4)
 // LD E E
 // nothing to do
 DEF_INST_END
 
-DEF_INST(LD_E_H_x_x_x_x, 0x5C, 1, 4)
+DEF_INST("LD E,H", 0x5C, 1, 4)
 E(H());
 DEF_INST_END
 
-DEF_INST(LD_E_L_x_x_x_x, 0x5D, 1, 4)
+DEF_INST("LD E,L", 0x5D, 1, 4)
 E(L());
 DEF_INST_END
 
-DEF_INST(LD_E_xHLx_x_x_x_x, 0x5E, 1, 8)
+DEF_INST("LD E,[HL]", 0x5E, 1, 8)
 E(get(HL()));
 DEF_INST_END
 
-DEF_INST(LD_E_A_x_x_x_x, 0x5F, 1, 4)
+DEF_INST("LD E,A", 0x5F, 1, 4)
 E(A());
 DEF_INST_END
 
-DEF_INST(LD_H_B_x_x_x_x, 0x60, 1, 4)
+DEF_INST("LD H,B", 0x60, 1, 4)
 H(B());
 DEF_INST_END
 
-DEF_INST(LD_H_C_x_x_x_x, 0x61, 1, 4)
+DEF_INST("LD H,C", 0x61, 1, 4)
 H(C());
 DEF_INST_END
 
-DEF_INST(LD_H_D_x_x_x_x, 0x62, 1, 4)
+DEF_INST("LD H,D", 0x62, 1, 4)
 H(D());
 DEF_INST_END
 
-DEF_INST(LD_H_E_x_x_x_x, 0x63, 1, 4)
+DEF_INST("LD H,E", 0x63, 1, 4)
 H(E());
 DEF_INST_END
 
-DEF_INST(LD_H_H_x_x_x_x, 0x64, 1, 4)
+DEF_INST("LD H,H", 0x64, 1, 4)
 // LD H H
 // nothing to do
 DEF_INST_END
 
-DEF_INST(LD_H_L_x_x_x_x, 0x65, 1, 4)
+DEF_INST("LD H,L", 0x65, 1, 4)
 H(L());
 DEF_INST_END
 
-DEF_INST(LD_H_xHLx_x_x_x_x, 0x66, 1, 8)
+DEF_INST("LD H,[HL]", 0x66, 1, 8)
 H(get(HL()));
 DEF_INST_END
 
-DEF_INST(LD_H_A_x_x_x_x, 0x67, 1, 4)
+DEF_INST("LD H,A", 0x67, 1, 4)
 H(A());
 DEF_INST_END
 
-DEF_INST(LD_L_B_x_x_x_x, 0x68, 1, 4)
+DEF_INST("LD L,B", 0x68, 1, 4)
 L(B());
 DEF_INST_END
 
-DEF_INST(LD_L_C_x_x_x_x, 0x69, 1, 4)
+DEF_INST("LD L,C", 0x69, 1, 4)
 L(C());
 DEF_INST_END
 
-DEF_INST(LD_L_D_x_x_x_x, 0x6A, 1, 4)
+DEF_INST("LD L,D", 0x6A, 1, 4)
 L(D());
 DEF_INST_END
 
-DEF_INST(LD_L_E_x_x_x_x, 0x6B, 1, 4)
+DEF_INST("LD L,E", 0x6B, 1, 4)
 L(E());
 DEF_INST_END
 
-DEF_INST(LD_L_H_x_x_x_x, 0x6C, 1, 4)
+DEF_INST("LD L,H", 0x6C, 1, 4)
 L(H());
 DEF_INST_END
 
-DEF_INST(LD_L_L_x_x_x_x, 0x6D, 1, 4)
+DEF_INST("LD L,L", 0x6D, 1, 4)
 // LD L L
 DEF_INST_END
 
-DEF_INST(LD_L_xHLx_x_x_x_x, 0x6E, 1, 8)
+DEF_INST("LD L,[HL]", 0x6E, 1, 8)
 L(get(HL()));
 DEF_INST_END
 
-DEF_INST(LD_L_A_x_x_x_x, 0x6F, 1, 4)
+DEF_INST("LD L,A", 0x6F, 1, 4)
 L(A());
 DEF_INST_END
 
-DEF_INST(LD_xHLx_B_x_x_x_x, 0x70, 1, 8)
+DEF_INST("LD [HL],B", 0x70, 1, 8)
 set(HL(), B());
 DEF_INST_END
 
-DEF_INST(LD_xHLx_C_x_x_x_x, 0x71, 1, 8)
+DEF_INST("LD [HL],C", 0x71, 1, 8)
 set(HL(), C());
 DEF_INST_END
 
-DEF_INST(LD_xHLx_D_x_x_x_x, 0x72, 1, 8)
+DEF_INST("LD [HL],D", 0x72, 1, 8)
 set(HL(), D());
 DEF_INST_END
 
-DEF_INST(LD_xHLx_E_x_x_x_x, 0x73, 1, 8)
+DEF_INST("LD [HL],E", 0x73, 1, 8)
 set(HL(), E());
 DEF_INST_END
 
-DEF_INST(LD_xHLx_H_x_x_x_x, 0x74, 1, 8)
+DEF_INST("LD [HL],H", 0x74, 1, 8)
 set(HL(), H());
 DEF_INST_END
 
-DEF_INST(LD_xHLx_L_x_x_x_x, 0x75, 1, 8)
+DEF_INST("LD [HL],L", 0x75, 1, 8)
 set(HL(), L());
 DEF_INST_END
 
-DEF_INST(HALT_x_x_x_x, 0x76, 1, 4)
+DEF_INST("HALT", 0x76, 1, 4)
 halt(true);
 DEF_INST_END
 
-DEF_INST(LD_xHLx_A_x_x_x_x, 0x77, 1, 8)
+DEF_INST("LD [HL],A", 0x77, 1, 8)
 set(HL(), A());
 DEF_INST_END
 
-DEF_INST(LD_A_B_x_x_x_x, 0x78, 1, 4)
+DEF_INST("LD A,B", 0x78, 1, 4)
 A(B());
 DEF_INST_END
 
-DEF_INST(LD_A_C_x_x_x_x, 0x79, 1, 4)
+DEF_INST("LD A,C", 0x79, 1, 4)
 A(C());
 DEF_INST_END
 
-DEF_INST(LD_A_D_x_x_x_x, 0x7A, 1, 4)
+DEF_INST("LD A,D", 0x7A, 1, 4)
 A(D());
 DEF_INST_END
 
-DEF_INST(LD_A_E_x_x_x_x, 0x7B, 1, 4)
+DEF_INST("LD A,E", 0x7B, 1, 4)
 A(E());
 DEF_INST_END
 
-DEF_INST(LD_A_H_x_x_x_x, 0x7C, 1, 4)
+DEF_INST("LD A,H", 0x7C, 1, 4)
 A(H());
 DEF_INST_END
 
-DEF_INST(LD_A_L_x_x_x_x, 0x7D, 1, 4)
+DEF_INST("LD A,L", 0x7D, 1, 4)
 A(L());
 DEF_INST_END
 
-DEF_INST(LD_A_xHLx_x_x_x_x, 0x7E, 1, 8)
+DEF_INST("LD A,[HL]", 0x7E, 1, 8)
 A(get(HL()));
 DEF_INST_END
 
-DEF_INST(LD_A_A_x_x_x_x, 0x7F, 1, 4)
+DEF_INST("LD A,A", 0x7F, 1, 4)
 // LD A A
 DEF_INST_END
 
-DEF_INST(ADD_A_B_Z_0_H_C, 0x80, 1, 4)
+DEF_INST("ADD A,B", 0x80, 1, 4)
 A(add8(A(), B()));
 DEF_INST_END
 
-DEF_INST(ADD_A_C_Z_0_H_C, 0x81, 1, 4)
+DEF_INST("ADD A,C", 0x81, 1, 4)
 A(add8(A(), C()));
 DEF_INST_END
 
-DEF_INST(ADD_A_D_Z_0_H_C, 0x82, 1, 4)
+DEF_INST("ADD A,D", 0x82, 1, 4)
 A(add8(A(), D()));
 DEF_INST_END
 
-DEF_INST(ADD_A_E_Z_0_H_C, 0x83, 1, 4)
+DEF_INST("ADD A,E", 0x83, 1, 4)
 A(add8(A(), E()));
 DEF_INST_END
 
-DEF_INST(ADD_A_H_Z_0_H_C, 0x84, 1, 4)
+DEF_INST("ADD A,H", 0x84, 1, 4)
 A(add8(A(), H()));
 DEF_INST_END
 
-DEF_INST(ADD_A_L_Z_0_H_C, 0x85, 1, 4)
+DEF_INST("ADD A,L", 0x85, 1, 4)
 A(add8(A(), L()));
 DEF_INST_END
 
-DEF_INST(ADD_A_xHLx_Z_0_H_C, 0x86, 1, 8)
+DEF_INST("ADD A,[HL]", 0x86, 1, 8)
 A(add8(A(), get(HL())));
 DEF_INST_END
 
-DEF_INST(ADD_A_A_Z_0_H_C, 0x87, 1, 4)
+DEF_INST("ADD A,A", 0x87, 1, 4)
 A(add8(A(), A()));
 DEF_INST_END
 
-DEF_INST(ADC_A_B_Z_0_H_C, 0x88, 1, 4)
+DEF_INST("ADC A,B", 0x88, 1, 4)
 A(adc8(A(), B()));
 DEF_INST_END
 
-DEF_INST(ADC_A_C_Z_0_H_C, 0x89, 1, 4)
+DEF_INST("ADC A,C", 0x89, 1, 4)
 A(adc8(A(), C()));
 DEF_INST_END
 
-DEF_INST(ADC_A_D_Z_0_H_C, 0x8A, 1, 4)
+DEF_INST("ADC A,D", 0x8A, 1, 4)
 A(adc8(A(), D()));
 DEF_INST_END
 
-DEF_INST(ADC_A_E_Z_0_H_C, 0x8B, 1, 4)
+DEF_INST("ADC A,E", 0x8B, 1, 4)
 A(adc8(A(), E()));
 DEF_INST_END
 
-DEF_INST(ADC_A_H_Z_0_H_C, 0x8C, 1, 4)
+DEF_INST("ADC A,H", 0x8C, 1, 4)
 A(adc8(A(), H()));
 DEF_INST_END
 
-DEF_INST(ADC_A_L_Z_0_H_C, 0x8D, 1, 4)
+DEF_INST("ADC A,L", 0x8D, 1, 4)
 A(adc8(A(), L()));
 DEF_INST_END
 
-DEF_INST(ADC_A_xHLx_Z_0_H_C, 0x8E, 1, 8)
+DEF_INST("ADC A,[HL]", 0x8E, 1, 8)
 A(adc8(A(), get(HL())));
 DEF_INST_END
 
-DEF_INST(ADC_A_A_Z_0_H_C, 0x8F, 1, 4)
+DEF_INST("ADC A,A", 0x8F, 1, 4)
 A(adc8(A(), A()));
 DEF_INST_END
 
-DEF_INST(SUB_A_B_Z_1_H_C, 0x90, 1, 4)
+DEF_INST("SUB A,B", 0x90, 1, 4)
 A(sub8(A(), B()));
 DEF_INST_END
 
-DEF_INST(SUB_A_C_Z_1_H_C, 0x91, 1, 4)
+DEF_INST("SUB A,C", 0x91, 1, 4)
 A(sub8(A(), C()));
 DEF_INST_END
 
-DEF_INST(SUB_A_D_Z_1_H_C, 0x92, 1, 4)
+DEF_INST("SUB A,D", 0x92, 1, 4)
 A(sub8(A(), D()));
 DEF_INST_END
 
-DEF_INST(SUB_A_E_Z_1_H_C, 0x93, 1, 4)
+DEF_INST("SUB A,E", 0x93, 1, 4)
 A(sub8(A(), E()));
 DEF_INST_END
 
-DEF_INST(SUB_A_H_Z_1_H_C, 0x94, 1, 4)
+DEF_INST("SUB A,H", 0x94, 1, 4)
 A(sub8(A(), H()));
 DEF_INST_END
 
-DEF_INST(SUB_A_L_Z_1_H_C, 0x95, 1, 4)
+DEF_INST("SUB A,L", 0x95, 1, 4)
 A(sub8(A(), L()));
 DEF_INST_END
 
-DEF_INST(SUB_A_xHLx_Z_1_H_C, 0x96, 1, 8)
+DEF_INST("SUB A,[HL]", 0x96, 1, 8)
 A(sub8(A(), get(HL())));
 DEF_INST_END
 
-DEF_INST(SUB_A_A_1_1_0_0, 0x97, 1, 4)
+DEF_INST("SUB A,A", 0x97, 1, 4)
 A(sub8(A(), A()));
 DEF_INST_END
 
-DEF_INST(SBC_A_B_Z_1_H_C, 0x98, 1, 4)
+DEF_INST("SBC A,B", 0x98, 1, 4)
 A(sbc8(A(), B()));
 DEF_INST_END
 
-DEF_INST(SBC_A_C_Z_1_H_C, 0x99, 1, 4)
+DEF_INST("SBC A,C", 0x99, 1, 4)
 A(sbc8(A(), C()));
 DEF_INST_END
 
-DEF_INST(SBC_A_D_Z_1_H_C, 0x9A, 1, 4)
+DEF_INST("SBC A,D", 0x9A, 1, 4)
 A(sbc8(A(), D()));
 DEF_INST_END
 
-DEF_INST(SBC_A_E_Z_1_H_C, 0x9B, 1, 4)
+DEF_INST("SBC A,E", 0x9B, 1, 4)
 A(sbc8(A(), E()));
 DEF_INST_END
 
-DEF_INST(SBC_A_H_Z_1_H_C, 0x9C, 1, 4)
+DEF_INST("SBC A,H", 0x9C, 1, 4)
 A(sbc8(A(), H()));
 DEF_INST_END
 
-DEF_INST(SBC_A_L_Z_1_H_C, 0x9D, 1, 4)
+DEF_INST("SBC A,L", 0x9D, 1, 4)
 A(sbc8(A(), L()));
 DEF_INST_END
 
-DEF_INST(SBC_A_xHLx_Z_1_H_C, 0x9E, 1, 8)
+DEF_INST("SBC A,[HL]", 0x9E, 1, 8)
 A(sbc8(A(), get(HL())));
 DEF_INST_END
 
-DEF_INST(SBC_A_A_Z_1_H_x, 0x9F, 1, 4)
+DEF_INST("SBC A,A", 0x9F, 1, 4)
 A(sbc8(A(), A()));
 DEF_INST_END
 
-DEF_INST(AND_A_B_Z_0_1_0, 0xA0, 1, 4)
+DEF_INST("AND A,B", 0xA0, 1, 4)
 A(and8(A(), B()));
 DEF_INST_END
 
-DEF_INST(AND_A_C_Z_0_1_0, 0xA1, 1, 4)
+DEF_INST("AND A,C", 0xA1, 1, 4)
 A(and8(A(), C()));
 DEF_INST_END
 
-DEF_INST(AND_A_D_Z_0_1_0, 0xA2, 1, 4)
+DEF_INST("AND A,D", 0xA2, 1, 4)
 A(and8(A(), D()));
 DEF_INST_END
 
-DEF_INST(AND_A_E_Z_0_1_0, 0xA3, 1, 4)
+DEF_INST("AND A,E", 0xA3, 1, 4)
 A(and8(A(), E()));
 DEF_INST_END
 
-DEF_INST(AND_A_H_Z_0_1_0, 0xA4, 1, 4)
+DEF_INST("AND A,H", 0xA4, 1, 4)
 A(and8(A(), H()));
 DEF_INST_END
 
-DEF_INST(AND_A_L_Z_0_1_0, 0xA5, 1, 4)
+DEF_INST("AND A,L", 0xA5, 1, 4)
 A(and8(A(), L()));
 DEF_INST_END
 
-DEF_INST(AND_A_xHLx_Z_0_1_0, 0xA6, 1, 8)
+DEF_INST("AND A,[HL]", 0xA6, 1, 8)
 A(and8(A(), get(HL())));
 DEF_INST_END
 
-DEF_INST(AND_A_A_Z_0_1_0, 0xA7, 1, 4)
+DEF_INST("AND A,A", 0xA7, 1, 4)
 A(and8(A(), A()));
 DEF_INST_END
 
-DEF_INST(XOR_A_B_Z_0_0_0, 0xA8, 1, 4)
+DEF_INST("XOR A,B", 0xA8, 1, 4)
 A(xor8(A(), B()));
 DEF_INST_END
 
-DEF_INST(XOR_A_C_Z_0_0_0, 0xA9, 1, 4)
+DEF_INST("XOR A,C", 0xA9, 1, 4)
 A(xor8(A(), C()));
 DEF_INST_END
 
-DEF_INST(XOR_A_D_Z_0_0_0, 0xAA, 1, 4)
+DEF_INST("XOR A,D", 0xAA, 1, 4)
 A(xor8(A(), D()));
 DEF_INST_END
 
-DEF_INST(XOR_A_E_Z_0_0_0, 0xAB, 1, 4)
+DEF_INST("XOR A,E", 0xAB, 1, 4)
 A(xor8(A(), E()));
 DEF_INST_END
 
-DEF_INST(XOR_A_H_Z_0_0_0, 0xAC, 1, 4)
+DEF_INST("XOR A,H", 0xAC, 1, 4)
 A(xor8(A(), H()));
 DEF_INST_END
 
-DEF_INST(XOR_A_L_Z_0_0_0, 0xAD, 1, 4)
+DEF_INST("XOR A,L", 0xAD, 1, 4)
 A(xor8(A(), L()));
 DEF_INST_END
 
-DEF_INST(XOR_A_xHLx_Z_0_0_0, 0xAE, 1, 8)
+DEF_INST("XOR A,[HL]", 0xAE, 1, 8)
 A(xor8(A(), get(HL())));
 DEF_INST_END
 
-DEF_INST(XOR_A_A_1_0_0_0, 0xAF, 1, 4)
+DEF_INST("XOR A,A", 0xAF, 1, 4)
 A(xor8(A(), A()));
 DEF_INST_END
 
-DEF_INST(OR_A_B_Z_0_0_0, 0xB0, 1, 4)
+DEF_INST("OR A,B", 0xB0, 1, 4)
 A(or8(A(), B()));
 DEF_INST_END
 
-DEF_INST(OR_A_C_Z_0_0_0, 0xB1, 1, 4)
+DEF_INST("OR A,C", 0xB1, 1, 4)
 A(or8(A(), C()));
 DEF_INST_END
 
-DEF_INST(OR_A_D_Z_0_0_0, 0xB2, 1, 4)
+DEF_INST("OR A,D", 0xB2, 1, 4)
 A(or8(A(), D()));
 DEF_INST_END
 
-DEF_INST(OR_A_E_Z_0_0_0, 0xB3, 1, 4)
+DEF_INST("OR A,E", 0xB3, 1, 4)
 A(or8(A(), E()));
 DEF_INST_END
 
-DEF_INST(OR_A_H_Z_0_0_0, 0xB4, 1, 4)
+DEF_INST("OR A,H", 0xB4, 1, 4)
 A(or8(A(), H()));
 DEF_INST_END
 
-DEF_INST(OR_A_L_Z_0_0_0, 0xB5, 1, 4)
+DEF_INST("OR A,L", 0xB5, 1, 4)
 A(or8(A(), L()));
 DEF_INST_END
 
-DEF_INST(OR_A_xHLx_Z_0_0_0, 0xB6, 1, 8)
+DEF_INST("OR A,[HL]", 0xB6, 1, 8)
 A(or8(A(), get(HL())));
 DEF_INST_END
 
-DEF_INST(OR_A_A_Z_0_0_0, 0xB7, 1, 4)
+DEF_INST("OR A,A", 0xB7, 1, 4)
 A(or8(A(), A()));
 DEF_INST_END
 
-DEF_INST(CP_A_B_Z_1_H_C, 0xB8, 1, 4)
+DEF_INST("CP A,B", 0xB8, 1, 4)
 cp8(A(), B());
 DEF_INST_END
 
-DEF_INST(CP_A_C_Z_1_H_C, 0xB9, 1, 4)
+DEF_INST("CP A,C", 0xB9, 1, 4)
 cp8(A(), C());
 DEF_INST_END
 
-DEF_INST(CP_A_D_Z_1_H_C, 0xBA, 1, 4)
+DEF_INST("CP A,D", 0xBA, 1, 4)
 cp8(A(), D());
 DEF_INST_END
 
-DEF_INST(CP_A_E_Z_1_H_C, 0xBB, 1, 4)
+DEF_INST("CP A,E", 0xBB, 1, 4)
 cp8(A(), E());
 DEF_INST_END
 
-DEF_INST(CP_A_H_Z_1_H_C, 0xBC, 1, 4)
+DEF_INST("CP A,H", 0xBC, 1, 4)
 cp8(A(), H());
 DEF_INST_END
 
-DEF_INST(CP_A_L_Z_1_H_C, 0xBD, 1, 4)
+DEF_INST("CP A,L", 0xBD, 1, 4)
 cp8(A(), L());
 DEF_INST_END
 
-DEF_INST(CP_A_xHLx_Z_1_H_C, 0xBE, 1, 8)
+DEF_INST("CP A,[HL]", 0xBE, 1, 8)
 cp8(A(), get(HL()));
 DEF_INST_END
 
-DEF_INST(CP_A_A_1_1_0_0, 0xBF, 1, 4)
+DEF_INST("CP A,A", 0xBF, 1, 4)
 cp8(A(), A());
 DEF_INST_END
 
-DEF_INST(RET_NZ_x_x_x_x, 0xC0, 1, 8)
+DEF_INST("RET NZ", 0xC0, 1, 8)
 tick();
 if (!zf()) {
   PC(pop16());
@@ -956,11 +954,11 @@ if (!zf()) {
 }
 DEF_INST_END
 
-DEF_INST(POP_BC_x_x_x_x, 0xC1, 1, 12)
+DEF_INST("POP BC", 0xC1, 1, 12)
 BCWithoutTick(pop16());
 DEF_INST_END
 
-DEF_INST(JP_NZ_a16_x_x_x_x, 0xC2, 3, 12)
+DEF_INST("JP NZ,a16", 0xC2, 3, 12)
 u16 target = imm16();
 if (!zf()) {
   PC(target);
@@ -968,11 +966,11 @@ if (!zf()) {
 }
 DEF_INST_END
 
-DEF_INST(JP_a16_x_x_x_x, 0xC3, 3, 16)
+DEF_INST("JP a16", 0xC3, 3, 16)
 PC(imm16());
 DEF_INST_END
 
-DEF_INST(CALL_NZ_a16_x_x_x_x, 0xC4, 3, 12)
+DEF_INST("CALL NZ,a16", 0xC4, 3, 12)
 u16 target = imm16();
 if (!zf()) {
   push16(PC());
@@ -981,22 +979,22 @@ if (!zf()) {
 }
 DEF_INST_END
 
-DEF_INST(PUSH_BC_x_x_x_x, 0xC5, 1, 16)
+DEF_INST("PUSH BC", 0xC5, 1, 16)
 tick();
 push16(BC());
 DEF_INST_END
 
-DEF_INST(ADD_A_n8_Z_0_H_C, 0xC6, 2, 8)
+DEF_INST("ADD A,n8", 0xC6, 2, 8)
 A(add8(A(), imm8()));
 DEF_INST_END
 
-DEF_INST(RST_0x00_x_x_x_x, 0xC7, 1, 16)
+DEF_INST("RST $00", 0xC7, 1, 16)
 tick();
 push16(PC());
 PCWithoutTick(0x00);
 DEF_INST_END
 
-DEF_INST(RET_Z_x_x_x_x, 0xC8, 1, 8)
+DEF_INST("RET Z", 0xC8, 1, 8)
 tick();
 if (zf()) {
   PC(pop16());
@@ -1004,11 +1002,11 @@ if (zf()) {
 }
 DEF_INST_END
 
-DEF_INST(RET_x_x_x_x, 0xC9, 1, 16)
+DEF_INST("RET", 0xC9, 1, 16)
 PC(pop16());
 DEF_INST_END
 
-DEF_INST(JP_Z_a16_x_x_x_x, 0xCA, 3, 12)
+DEF_INST("JP Z,a16", 0xCA, 3, 12)
 u16 target = imm16();
 if (zf()) {
   PC(target);
@@ -1016,7 +1014,7 @@ if (zf()) {
 }
 DEF_INST_END
 
-DEF_INST(PREFIX_x_x_x_x, 0xCB, 1, 4)
+DEF_INST("PREFIX", 0xCB, 1, 4)
 // extend instructions
 // https://gbdev.io/pandocs/CPU_Instruction_Set.html#cb-prefix-instructions
 /*
@@ -1140,7 +1138,7 @@ if (bit_op_bit != 1) {
 }
 DEF_INST_END
 
-DEF_INST(CALL_Z_a16_x_x_x_x, 0xCC, 3, 12)
+DEF_INST("CALL Z,a16", 0xCC, 3, 12)
 u16 target = imm16();
 if (zf()) {
   push16(PC());
@@ -1149,23 +1147,23 @@ if (zf()) {
 }
 DEF_INST_END
 
-DEF_INST(CALL_a16_x_x_x_x, 0xCD, 3, 24)
+DEF_INST("CALL a16", 0xCD, 3, 24)
 u16 target = imm16();
 push16(PC());
 PC(target);
 DEF_INST_END
 
-DEF_INST(ADC_A_n8_Z_0_H_C, 0xCE, 2, 8)
+DEF_INST("ADC A,n8", 0xCE, 2, 8)
 A(adc8(A(), imm8()));
 DEF_INST_END
 
-DEF_INST(RST_0x08_x_x_x_x, 0xCF, 1, 16)
+DEF_INST("RST $08", 0xCF, 1, 16)
 tick();
 push16(PC());
 PCWithoutTick(0x08);
 DEF_INST_END
 
-DEF_INST(RET_NC_x_x_x_x, 0xD0, 1, 8)
+DEF_INST("RET NC", 0xD0, 1, 8)
 tick();
 if (!cf()) {
   PC(pop16());
@@ -1173,11 +1171,11 @@ if (!cf()) {
 }
 DEF_INST_END
 
-DEF_INST(POP_DE_x_x_x_x, 0xD1, 1, 12)
+DEF_INST("POP DE", 0xD1, 1, 12)
 DEWithoutTick(pop16());
 DEF_INST_END
 
-DEF_INST(JP_NC_a16_x_x_x_x, 0xD2, 3, 12)
+DEF_INST("JP NC,a16", 0xD2, 3, 12)
 u16 target = imm16();
 if (!cf()) {
   PC(target);
@@ -1185,10 +1183,10 @@ if (!cf()) {
 }
 DEF_INST_END
 
-DEF_INST(ILLEGAL_D3_x_x_x_x, 0xD3, 1, 4)
+DEF_INST("ILLEGAL_D3", 0xD3, 1, 4)
 DEF_INST_END
 
-DEF_INST(CALL_NC_a16_x_x_x_x, 0xD4, 3, 12)
+DEF_INST("CALL NC,a16", 0xD4, 3, 12)
 u16 target = imm16();
 if (!cf()) {
   push16(PC());
@@ -1197,22 +1195,22 @@ if (!cf()) {
 }
 DEF_INST_END
 
-DEF_INST(PUSH_DE_x_x_x_x, 0xD5, 1, 16)
+DEF_INST("PUSH DE", 0xD5, 1, 16)
 tick();
 push16(DE());
 DEF_INST_END
 
-DEF_INST(SUB_A_n8_Z_1_H_C, 0xD6, 2, 8)
+DEF_INST("SUB A,n8", 0xD6, 2, 8)
 A(sub8(A(), imm8()));
 DEF_INST_END
 
-DEF_INST(RST_0x10_x_x_x_x, 0xD7, 1, 16)
+DEF_INST("RST $10", 0xD7, 1, 16)
 tick();
 push16(PC());
 PCWithoutTick(0x10);
 DEF_INST_END
 
-DEF_INST(RET_C_x_x_x_x, 0xD8, 1, 8)
+DEF_INST("RET C", 0xD8, 1, 8)
 tick();
 if (cf()) {
   PC(pop16());
@@ -1220,12 +1218,12 @@ if (cf()) {
 }
 DEF_INST_END
 
-DEF_INST(RETI_x_x_x_x, 0xD9, 1, 16)
+DEF_INST("RETI", 0xD9, 1, 16)
 IME(1);
 PC(pop16());
 DEF_INST_END
 
-DEF_INST(JP_C_a16_x_x_x_x, 0xDA, 3, 12)
+DEF_INST("JP C,a16", 0xDA, 3, 12)
 u16 target = imm16();
 if (cf()) {
   PC(target);
@@ -1233,10 +1231,10 @@ if (cf()) {
 }
 DEF_INST_END
 
-DEF_INST(ILLEGAL_DB_x_x_x_x, 0xDB, 1, 4)
+DEF_INST("ILLEGAL_DB", 0xDB, 1, 4)
 DEF_INST_END
 
-DEF_INST(CALL_C_a16_x_x_x_x, 0xDC, 3, 12)
+DEF_INST("CALL C,a16", 0xDC, 3, 12)
 u16 target = imm16();
 if (cf()) {
   push16(PC());
@@ -1245,141 +1243,141 @@ if (cf()) {
 }
 DEF_INST_END
 
-DEF_INST(ILLEGAL_DD_x_x_x_x, 0xDD, 1, 4)
+DEF_INST("ILLEGAL_DD", 0xDD, 1, 4)
 DEF_INST_END
 
-DEF_INST(SBC_A_n8_Z_1_H_C, 0xDE, 2, 8)
+DEF_INST("SBC A,n8", 0xDE, 2, 8)
 A(sbc8(A(), imm8()));
 DEF_INST_END
 
-DEF_INST(RST_0x18_x_x_x_x, 0xDF, 1, 16)
+DEF_INST("RST $18", 0xDF, 1, 16)
 tick();
 push16(PC());
 PCWithoutTick(0x18);
 DEF_INST_END
 
-DEF_INST(LDH_xa8x_A_x_x_x_x, 0xE0, 2, 12)
+DEF_INST("LDH [a8],A", 0xE0, 2, 12)
 set(OFFSET + imm8(), A());
 DEF_INST_END
 
-DEF_INST(POP_HL_x_x_x_x, 0xE1, 1, 12)
+DEF_INST("POP HL", 0xE1, 1, 12)
 HLWithoutTick(pop16());
 DEF_INST_END
 
-DEF_INST(LD_xCx_A_x_x_x_x, 0xE2, 1, 8)
+DEF_INST("LD [C],A", 0xE2, 1, 8)
 set(OFFSET + C(), A());
 DEF_INST_END
 
-DEF_INST(ILLEGAL_E3_x_x_x_x, 0xE3, 1, 4)
+DEF_INST("ILLEGAL_E3", 0xE3, 1, 4)
 DEF_INST_END
-DEF_INST(ILLEGAL_E4_x_x_x_x, 0xE4, 1, 4)
+DEF_INST("ILLEGAL_E4", 0xE4, 1, 4)
 DEF_INST_END
 
-DEF_INST(PUSH_HL_x_x_x_x, 0xE5, 1, 16)
+DEF_INST("PUSH HL", 0xE5, 1, 16)
 tick();
 push16(HL());
 DEF_INST_END
 
-DEF_INST(AND_A_n8_Z_0_1_0, 0xE6, 2, 8)
+DEF_INST("AND A,n8", 0xE6, 2, 8)
 A(and8(A(), imm8()));
 DEF_INST_END
 
-DEF_INST(RST_0x20_x_x_x_x, 0xE7, 1, 16)
+DEF_INST("RST $20", 0xE7, 1, 16)
 tick();
 push16(PC());
 PCWithoutTick(0x20);
 DEF_INST_END
 
-DEF_INST(ADD_SP_e8_0_0_H_C, 0xE8, 2, 16)
+DEF_INST("ADD SP,e8", 0xE8, 2, 16)
 SP(add16(SP(), imm8()));
 tick();
 DEF_INST_END
 
-DEF_INST(JP_HL_x_x_x_x, 0xE9, 1, 4)
+DEF_INST("JP HL", 0xE9, 1, 4)
 PCWithoutTick(HL());
 DEF_INST_END
 
-DEF_INST(LD_xa16x_A_x_x_x_x, 0xEA, 3, 16)
+DEF_INST("LD [a16],A", 0xEA, 3, 16)
 set(imm16(), A());
 DEF_INST_END
 
-DEF_INST(ILLEGAL_EB_x_x_x_x, 0xEB, 1, 4)
+DEF_INST("ILLEGAL_EB", 0xEB, 1, 4)
 DEF_INST_END
-DEF_INST(ILLEGAL_EC_x_x_x_x, 0xEC, 1, 4)
+DEF_INST("ILLEGAL_EC", 0xEC, 1, 4)
 DEF_INST_END
-DEF_INST(ILLEGAL_ED_x_x_x_x, 0xED, 1, 4)
+DEF_INST("ILLEGAL_ED", 0xED, 1, 4)
 DEF_INST_END
 
-DEF_INST(XOR_A_n8_Z_0_0_0, 0xEE, 2, 8)
+DEF_INST("XOR A,n8", 0xEE, 2, 8)
 A(xor8(A(), imm8()));
 DEF_INST_END
 
-DEF_INST(RST_0x28_x_x_x_x, 0xEF, 1, 16)
+DEF_INST("RST $28", 0xEF, 1, 16)
 tick();
 push16(PC());
 PCWithoutTick(0x28);
 DEF_INST_END
 
-DEF_INST(LDH_A_xa8x_x_x_x_x, 0xF0, 2, 12)
+DEF_INST("LDH A,[a8]", 0xF0, 2, 12)
 A(get(OFFSET + imm8()));
 DEF_INST_END
 
-DEF_INST(POP_AF_Z_N_H_C, 0xF1, 1, 12)
+DEF_INST("POP AF", 0xF1, 1, 12)
 AF(pop16());
 DEF_INST_END
 
-DEF_INST(LD_A_xCx_x_x_x_x, 0xF2, 1, 8)
+DEF_INST("LD A,[C]", 0xF2, 1, 8)
 A(get(OFFSET + C()));
 DEF_INST_END
 
-DEF_INST(DI_x_x_x_x, 0xF3, 1, 4)
+DEF_INST("DI", 0xF3, 1, 4)
 IME(0);
 DEF_INST_END
 
-DEF_INST(ILLEGAL_F4_x_x_x_x, 0xF4, 1, 4)
+DEF_INST("ILLEGAL_F4", 0xF4, 1, 4)
 DEF_INST_END
 
-DEF_INST(PUSH_AF_x_x_x_x, 0xF5, 1, 16)
+DEF_INST("PUSH AF", 0xF5, 1, 16)
 tick();
 push16(AF());
 DEF_INST_END
 
-DEF_INST(OR_A_n8_Z_0_0_0, 0xF6, 2, 8)
+DEF_INST("OR A,n8", 0xF6, 2, 8)
 A(or8(A(), imm8()));
 DEF_INST_END
 
-DEF_INST(RST_0x30_x_x_x_x, 0xF7, 1, 16)
+DEF_INST("RST $30", 0xF7, 1, 16)
 tick();
 push16(PC());
 PCWithoutTick(0x30);
 DEF_INST_END
 
-DEF_INST(LD_HL_SP_e8_0_0_H_C, 0xF8, 2, 12)
+DEF_INST("LD HL,SP,e8", 0xF8, 2, 12)
 HL(add16(SP(), imm8()));
 DEF_INST_END
 
-DEF_INST(LD_SP_HL_x_x_x_x, 0xF9, 1, 8)
+DEF_INST("LD SP,HL", 0xF9, 1, 8)
 SP(HL());
 DEF_INST_END
 
-DEF_INST(LD_A_xa16x_x_x_x_x, 0xFA, 3, 16)
+DEF_INST("LD A,[a16]", 0xFA, 3, 16)
 A(get(imm16()));
 DEF_INST_END
 
-DEF_INST(EI_x_x_x_x, 0xFB, 1, 4)
+DEF_INST("EI", 0xFB, 1, 4)
 IME(1);
 DEF_INST_END
 
-DEF_INST(ILLEGAL_FC_x_x_x_x, 0xFC, 1, 4)
+DEF_INST("ILLEGAL_FC", 0xFC, 1, 4)
 DEF_INST_END
-DEF_INST(ILLEGAL_FD_x_x_x_x, 0xFD, 1, 4)
+DEF_INST("ILLEGAL_FD", 0xFD, 1, 4)
 DEF_INST_END
 
-DEF_INST(CP_A_n8_Z_1_H_C, 0xFE, 2, 8)
+DEF_INST("CP A,n8", 0xFE, 2, 8)
 cp8(A(), imm8());
 DEF_INST_END
 
-DEF_INST(RST_0x38_x_x_x_x, 0xFF, 1, 16)
+DEF_INST("RST $38", 0xFF, 1, 16)
 tick();
 push16(PC());
 PCWithoutTick(0x38);
