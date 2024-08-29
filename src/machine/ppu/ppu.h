@@ -15,7 +15,7 @@ class MemoryBus;
 
 class LCDData {
 public:
-  constexpr static u32 BUFFER_SIZE = 160 * 144 * 4 /*rgba*/;
+  constexpr static u32 BUFFER_SIZE = LCD_WIDTH * LCD_HEIGHT * 4 /*rgba*/;
 
   u8 *get() { return ram_ + BUFFER_SIZE * buffer_index; }
 
@@ -152,7 +152,7 @@ private:
   Memory<0xfe00, 0xfe9f> oam_{};
   MemoryBus *memory_bus_{};
   LCDData lcd_data_;
-  u8 scanline_rendered_[160]{};
+  u8 scanline_rendered_[LCD_WIDTH]{};
   std::priority_queue<ObjectAttribute> sprite_buffer_;
   u16 dots_{};
 

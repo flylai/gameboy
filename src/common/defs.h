@@ -74,5 +74,9 @@ static constexpr u16 RP_BASE           = 0xFF56;
 static constexpr u16 OPRI_BASE         = 0xFF6C;
 static constexpr u16 SVBK_BASE         = 0xFF70;
 
+// Misc
+
+static constexpr u8 LCD_WIDTH          = 160;
+static constexpr u8 LCD_HEIGHT         = 144;
 
 } // namespace gb

@@ -38,7 +38,7 @@ void PPU::increaseLY() {
   ppu_reg_.LY(ppu_reg_.LY() + 1);
   if (windowEnable() && windowVisible() //
       && ppu_reg_.LY() > ppu_reg_.WY()  //
-      && ppu_reg_.LY() < (u16) (ppu_reg_.WY() + 144)) {
+      && ppu_reg_.LY() < (u16) (ppu_reg_.WY() + LCD_HEIGHT)) {
     fetcher_window_line_++;
   }
 }
@@ -51,7 +51,7 @@ void PPU::horizontalBlank() {
     dots_ = 0;
     increaseLY();
 
-    if (ppu_reg_.LY() == 144) {
+    if (ppu_reg_.LY() == LCD_HEIGHT) {
       memory_bus_->if_.irq(InterruptType::kVBLANK);
       ppu_reg_.mode(PPURegister::PPUMode::kVERTICAL_BLANK);
       lcd_data_.switchBuffer();
@@ -85,13 +85,13 @@ void PPU::drawingPixels() {
     dots_ = 0;
     ppu_reg_.mode(PPURegister::PPUMode::kHORIZONTAL_BLANK);
 
-    if (ppu_reg_.LY() > 144) {
+    if (ppu_reg_.LY() > LCD_HEIGHT) {
       return;
     }
 
 
     std::fill(std::begin(scanline_rendered_), std::end(scanline_rendered_), 0);
-    for (fetcher_x_ = 0; fetcher_x_ < 160; fetcher_x_++) {
+    for (fetcher_x_ = 0; fetcher_x_ < LCD_WIDTH; fetcher_x_++) {
       background_pixel_.reset();
       window_pixel_.reset();
       sprite_pixel_.reset();
@@ -133,7 +133,7 @@ inline u8 applyPalette(u8 color, u8 palette) {
 }
 
 void setPixel(u8 *buffer, i32 x, i32 y, u8 r, u8 g, u8 b) {
-  i32 offset         = (y * 160 + x) * 4;
+  i32 offset         = (y * LCD_WIDTH + x) * 4;
   buffer[offset]     = r;
   buffer[offset + 1] = g;
   buffer[offset + 2] = b;
