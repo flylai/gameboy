@@ -1,0 +1,60 @@
+name: Build Wasm and Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - wasm-ci
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Set up CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Set up Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Set up Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install --fix-missing libgl1-mesa-dev libglfw3 libglfw3-dev wget curl -y
+
+      - name: Set up Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: Build project
+        run: |
+          mkdir wasm-build
+          cd wasm-build
+          emcmake cmake ..
+          make
+          mkdir target_output
+          mv gameboy.html index.html
+          mv gameboy.wasm index.html gameboy.worker.js gameboy.js target_output/
+          # Add headers for wasm
+          echo -e "/*\n  Access-Control-Allow-Origin: *\n  Cross-Origin-Embedder-Policy: require-corp\n  Cross-Origin-Opener-Policy: same-origin\n" > target_output/_headers
+          cd ..
+
+      - name: Publish to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: ${{ secrets.CF_PROJECT_NAME }}
+          # `workingDirectory` / `directory`
+          directory: .
+          # Optional: Enable this if you want to have GitHub Deployments triggered
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          # cf production branch
+          branch: main
+          workingDirectory: wasm-build/target_output
+          wranglerVersion: '3'

@@ -32,7 +32,7 @@ if (EMSCRIPTEN)
     )
     string(JOIN " " LINK_FLAGS ${LINK_FLAGS_LIST})
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wformat -g -O2 -msimd128 -matomics -mbulk-memory")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wformat -O2 -msimd128 -matomics -mbulk-memory")
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} ${LINK_FLAGS})
     set(CMAKE_LINK_LIBRARY_FLAG ${CMAKE_LINK_LIBRARY_FLAG} ${LINK_FLAGS})
