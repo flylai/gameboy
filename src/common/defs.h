@@ -79,7 +79,7 @@ static constexpr u16 SVBK_BASE         = 0xFF70;
 static constexpr u8 LCD_WIDTH          = 160;
 static constexpr u8 LCD_HEIGHT         = 144;
 
-static constexpr u8 WINDOW_WIDTH       = 1280;
-static constexpr u8 WINDOW_HEIGHT      = 720;
+static constexpr u16 WINDOW_WIDTH      = 1280;
+static constexpr u16 WINDOW_HEIGHT     = 720;
 
 } // namespace gb

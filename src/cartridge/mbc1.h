@@ -10,7 +10,7 @@ public:
   explicit MBC1(const std::string& path) : Cartridge(path) {}
 
   void set(u16 addr, u8 val) override {
-    if (addr >= 0x0 && addr <= 0x1fff) {
+    if (addr <= 0x1fff) {
       // RAM enable
       if ((val & 0xf) == 0xa) {
         bank_.enable_ram = 1;
@@ -45,7 +45,7 @@ public:
   }
 
   u8 get(u16 addr) const override {
-    if (addr >= 0x0 && addr <= 0x3fff) {
+    if (addr <= 0x3fff) {
       if (work_mode_ == WorkMode::kADVANCE) {
         return rom_[((bank_.ram_bank << 5) & validRomBankMask()) * 0x4000 + addr];
       } else {

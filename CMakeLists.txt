@@ -3,7 +3,7 @@ project(gameboy)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wformat -O0 -g -fno-access-control -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fsanitize=address")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wextra -Wformat -O0 -g -Wno-unused-parameter -fno-access-control -fno-exceptions -fno-rtti -fno-omit-frame-pointer -fsanitize=address")
 
 set(ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -32,7 +32,7 @@ if (EMSCRIPTEN)
     )
     string(JOIN " " LINK_FLAGS ${LINK_FLAGS_LIST})
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wformat -O2 -msimd128 -matomics -mbulk-memory")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wformat -O3 -msimd128 -matomics -mbulk-memory")
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
     set(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} ${LINK_FLAGS})
     set(CMAKE_LINK_LIBRARY_FLAG ${CMAKE_LINK_LIBRARY_FLAG} ${LINK_FLAGS})
@@ -64,16 +64,25 @@ file(GLOB_RECURSE GB_HEADERS
         ${SRC_DIR}/debugger/*.h
 )
 
-
 file(GLOB_RECURSE GB_SRCS
         ${SRC_DIR}/cartridge/*.cpp
         ${SRC_DIR}/common/*.cpp
         ${SRC_DIR}/machine/*.cpp
+        ${SRC_DIR}/debugger/*.cpp
+)
+
+file(GLOB_RECURSE GB_GUI_HEADERS
+        ${SRC_DIR}/widget/*.h
+)
+
+file(GLOB_RECURSE GB_GUI_SRCS
+        ${SRC_DIR}/widget/*.cpp
 )
 
 add_executable(gameboy
         src/main.cpp
         ${GB_SRCS}
+        ${GB_GUI_SRCS}
         ${IMGUI_SOURCES}
 )
 
