@@ -105,7 +105,7 @@ TEST_P(GBTest, ARGS) {
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_cpu_instrs, GBTest,
                          ::testing::ValuesIn(getFileList("../tests/gb-test-roms/cpu_instrs/",
-                                                         gb_test_roms_checker, true, {}, 20)),
+                                                         gb_test_roms_checker, true, {}, 120)),
                          GBTest::ParamToString);
 
 INSTANTIATE_TEST_SUITE_P(gb_test_roms_instr_timing, GBTest,
