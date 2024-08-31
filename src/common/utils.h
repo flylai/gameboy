@@ -27,7 +27,12 @@ inline static T setBitN(T val, int n) {
   return clearBitN(val, n) | (1 << n);
 }
 
+#ifndef NDEBUG
+#define GB_ASSERT(IGNORE)
+#else
 #define GB_ASSERT(COND) assert((COND))
+#endif
+
 #define GB_STATIC_ASSERT(COND, MSG) static_assert((COND), MSG)
 #define INLINE __attribute__((always_inline)) inline
 #define GB_API __attribute__((visibility("default")))

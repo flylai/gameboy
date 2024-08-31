@@ -18,8 +18,7 @@ extern "C" void GameBoyRun(GameBoy gb) {
 extern "C" void GameBoyRunWithNewThread(GameBoy gb) {
   CHECK_GB(gb)
   auto *gameboy = (gb::GameBoy *) gb;
-  std::thread t([=]() { gameboy->rtc_.run(); });
-  t.detach();
+  gameboy->rtc_.runWithNewThread();
 }
 
 extern "C" void GameBoyStop(GameBoy gb) {
@@ -30,8 +29,8 @@ extern "C" void GameBoyStop(GameBoy gb) {
 
 extern "C" void GameBoyDestroy(GameBoy gb) {
   CHECK_GB(gb)
-  auto *gameboy = (gb::GameBoy *) gb;
-  gameboy->rtc_.stop();
+  GameBoyStop(gb);
+  delete (gb::GameBoy *) gb;
 }
 
 extern "C" const char *GameBoyTextureBuffer(GameBoy gb) {

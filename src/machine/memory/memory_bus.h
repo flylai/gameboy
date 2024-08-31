@@ -68,16 +68,20 @@ public:
   }
 
   u8 get(u16 addr) const override {
+#ifdef NDEBUG
     if (accessType(addr) == AccessType::kW) [[unlikely]] {
       return 0xff;
     }
+#endif // NDEBUG
     return getMemory(addr)->get(addr);
   }
 
   void set(u16 addr, u8 val) override {
+#ifdef NDEBUG
     if (accessType(addr) == AccessType::kR) [[unlikely]] {
       return;
     }
+#endif // NDEBUG
     getMemory(addr)->set(addr, val);
   }
 

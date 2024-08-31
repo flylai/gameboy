@@ -61,6 +61,7 @@ file(GLOB_RECURSE GB_HEADERS
         ${SRC_DIR}/cartridge/*.h
         ${SRC_DIR}/common/*.h
         ${SRC_DIR}/machine/*.h
+        ${SRC_DIR}/debugger/*.h
 )
 
 
