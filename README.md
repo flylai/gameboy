@@ -1,6 +1,6 @@
 # Google Test Report
 
-Commit: [fc63b966668d866681997cbab2666ad29ac4ae6f](https://github.com/flylai/gameboy/commit/fc63b966668d866681997cbab2666ad29ac4ae6f)
+Commit: [0c62a879e4c79eac5baf9179facda9ae3e04766d](https://github.com/flylai/gameboy/commit/0c62a879e4c79eac5baf9179facda9ae3e04766d)
 
 ## Suite: gb_test_roms_cpu_instrs/GBTest
 - ✅ **Test**: ../tests/gb-test-roms/cpu_instrs/cpu_instrs.gb
@@ -33,7 +33,7 @@ Commit: [fc63b966668d866681997cbab2666ad29ac4ae6f](https://github.com/flylai/gam
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/bits_bank1.gb
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/bits_bank2.gb
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/bits_mode.gb
-- ✅ **Test**: ../tests/mts/emulator-only/mbc1/bits_ramg.gb
+- ❌ **Test**: ../tests/mts/emulator-only/mbc1/bits_ramg.gb
 - ❌ **Test**: ../tests/mts/emulator-only/mbc1/multicart_rom_8Mb.gb
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/ram_256kb.gb
 - ✅ **Test**: ../tests/mts/emulator-only/mbc1/ram_64kb.gb
