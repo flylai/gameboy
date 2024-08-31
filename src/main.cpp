@@ -7,7 +7,7 @@
 #include "imgui_impl_opengl3.h"
 #include "include/gameboy_c.h"
 #include "machine/gameboy.h"
-#include "nameof.hpp"
+#include "widget/main_ui.h"
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -15,8 +15,9 @@
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 static std::function<void()> RenderLoop;
-GameBoy g_gameboy{};
 
+GameBoy g_gameboy{};
+gb::Widgets g_imgui_widgets;
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -30,130 +31,12 @@ extern "C" void LoadRom(const char* path) {
     GameBoyDestroy(g_gameboy);
   }
   g_gameboy = GameBoyInit(path);
+  g_imgui_widgets.setGameBoy((gb::GameBoy*) g_gameboy);
   GameBoyRunWithNewThread(g_gameboy);
 }
 
 static void glfw_error_callback(int error, const char* description) {
   fprintf(stderr, "GLFW Error %d: %s\n", error, description);
-}
-
-inline void decode_tile(gb::u16 data, gb::u8* target) {
-  gb::u8 lo                    = data & 0xff;
-  gb::u8 hi                    = data >> 8;
-  constexpr gb::u8 color_map[] = {
-          8,   24,  32,  //
-          52,  104, 86,  //
-          73,  126, 50,  //
-          224, 248, 208, //
-  };
-  for (gb::u8 i = 7; i > 0; i--) {
-    gb::u8 color1 = getBitN(lo, i);
-    gb::u8 color2 = getBitN(hi, i);
-    gb::u8 color  = (color2 << 1) | color1;
-    GB_ASSERT(color <= 3);
-    target[(7 - i) * 3 + 0] = color_map[color * 3 + 0];
-    target[(7 - i) * 3 + 1] = color_map[color * 3 + 1];
-    target[(7 - i) * 3 + 2] = color_map[color * 3 + 2];
-  }
-}
-
-bool updateTileMap(GameBoy gb, GLuint* out_texture, int* out_width, int* out_height) {
-#ifdef __EMSCRIPTEN__
-  // WASM will throw exception about "RuntimeError: memory access out of bounds"
-  return false;
-#else
-  if (!gb) {
-    return false;
-  }
-  auto* gameboy                     = (gb::GameBoy*) gb;
-  constexpr gb::u16 MAX_TILE_COUNT  = (0x97ff - 0x8000 + 1) / 16;
-  constexpr gb::u16 TILE_PER_ROW    = 16;
-  constexpr gb::u16 TILE_PER_COL    = MAX_TILE_COUNT / 16;
-  constexpr gb::u16 WIDTH           = TILE_PER_ROW * 8;
-  constexpr gb::u16 HEIGHT          = TILE_PER_COL * 8;
-  gb::u8 pixels[WIDTH * HEIGHT * 3] = {0};
-  gb::u16 tile_idx{};
-
-  for (gb::u16 addr = gb::VRAM_BASE; addr < 0x97ff; addr += 16) {
-    for (gb::u8 i = 0; i < 8; i++) {
-      // 3 means RGB,
-      gb::u32 offset = (tile_idx % 16) * 8 * 3              // x offset
-                       + ((tile_idx / 16) * 8) * 16 * 8 * 3 // y offset
-              ;
-      gb::u16 hi = gameboy->memory_bus_.get(gb::VRAM_BASE + tile_idx * 16 + i * 2);
-      gb::u16 lo = gameboy->memory_bus_.get(gb::VRAM_BASE + tile_idx * 16 + i * 2 + 1);
-      decode_tile(hi << 8 | lo, pixels + offset + i * 16 * 8 * 3);
-    }
-    tile_idx++;
-  }
-
-  static bool init = false;
-  static GLuint image_texture;
-  if (!init) {
-    init = true;
-    glGenTextures(1, &image_texture);
-  }
-  glBindTexture(GL_TEXTURE_2D, image_texture);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-
-  *out_texture = image_texture;
-  *out_width   = WIDTH;
-  *out_height  = HEIGHT;
-#endif
-  return true;
-}
-
-bool updateGameboyLCD(GameBoy gb, GLuint* out_texture, int* out_width, int* out_height, gb::u8 scale) {
-  if (!gb) {
-    return false;
-  }
-
-  constexpr gb::u32 WIDTH     = 160;
-  constexpr gb::u32 HEIGHT    = 144;
-  const gb::u32 SCALED_WIDTH  = WIDTH * scale;
-  const gb::u32 SCALED_HEIGHT = HEIGHT * scale;
-
-  static bool init            = false;
-  static GLuint image_texture;
-  if (!init) {
-    init = true;
-    glGenTextures(1, &image_texture);
-  }
-  glBindTexture(GL_TEXTURE_2D, image_texture);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-  const gb::u8* original_data = (gb::u8*) GameBoyTextureBuffer(gb);
-  std::vector<gb::u8> scaled_data(SCALED_WIDTH * SCALED_HEIGHT * 4);
-
-  for (gb::u32 y = 0; y < HEIGHT; ++y) {
-    for (gb::u32 x = 0; x < WIDTH; ++x) {
-      gb::u32 src_index = (y * WIDTH + x) * 4;
-      for (gb::u32 dy = 0; dy < scale; ++dy) {
-        for (gb::u32 dx = 0; dx < scale; ++dx) {
-          gb::u32 dst_index = ((y * scale + dy) * SCALED_WIDTH + (x * scale + dx)) * 4;
-          std::copy(original_data + src_index, original_data + src_index + 4, scaled_data.data() + dst_index);
-        }
-      }
-    }
-  }
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCALED_WIDTH, SCALED_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-               scaled_data.data());
-
-  *out_texture = image_texture;
-  *out_width   = SCALED_WIDTH;
-  *out_height  = SCALED_HEIGHT;
-  return true;
 }
 
 // Main code
@@ -235,32 +118,8 @@ int main(int argc, char* argv[]) {
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    {
-      int tile_texture_width  = 0;
-      int tile_texture_height = 0;
-      GLuint tile_texture_id  = 0;
-      ImGui::Begin("Tile Map");
-      updateTileMap(g_gameboy, &tile_texture_id, &tile_texture_width, &tile_texture_height);
-      ImGui::Text("pointer = %x", tile_texture_id);
-      ImGui::Text("size = %d x %d", tile_texture_width, tile_texture_height);
-      ImGui::Image((void*) (intptr_t) tile_texture_id, ImVec2(tile_texture_width, tile_texture_height));
-      ImGui::End();
-    }
+    g_imgui_widgets.draw();
 
-    {
-      int game_texture_width  = 0;
-      int game_texture_height = 0;
-      static int scale        = 3;
-      GLuint game_texture_id  = 0;
-      ImGui::Begin("Game");
-      ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-      updateGameboyLCD(g_gameboy, &game_texture_id, &game_texture_width, &game_texture_height, scale);
-      ImGui::Text("pointer = %x", game_texture_id);
-      ImGui::Text("size = %d x %d", game_texture_width, game_texture_height);
-      ImGui::SliderInt("Scale", &scale, 1, 16);
-      ImGui::Image((void*) (intptr_t) game_texture_id, ImVec2(game_texture_width, game_texture_height));
-      ImGui::End();
-    }
     //  Joypad status
     {
 #define DEF_KEY(KEY, ACTION)                           \
