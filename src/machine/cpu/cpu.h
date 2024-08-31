@@ -2,6 +2,7 @@
 
 #include "common/logger.h"
 #include "common/type.h"
+#include "debugger/disassembler.h"
 #include "interrupt.h"
 #include "machine/memory/memory_accessor.h"
 #include "machine/memory/memory_bus.h"
@@ -389,7 +390,12 @@ public:
 
   u8 &timingChecker() { return timing_checker_; }
 
-  void memoryBus(MemoryBus *memory_bus) { memory_bus_ = memory_bus; }
+  void memoryBus(MemoryBus *memory_bus) {
+    memory_bus_ = memory_bus;
+    disassembler_.memoryBus(memory_bus);
+  }
+
+  Disassembler &disassembler() { return disassembler_; }
 
 private:
   u16 af_{}, bc_{}, de_{}, hl_{};
@@ -401,6 +407,8 @@ private:
   MemoryBus *memory_bus_{};
 
   mutable u8 timing_checker_{};
+
+  Disassembler disassembler_;
 };
 
 } // namespace gb

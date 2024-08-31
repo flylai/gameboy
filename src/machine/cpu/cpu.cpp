@@ -1509,6 +1509,7 @@ u8 CPU::update() {
     if (irq != 0) {
       return irq;
     }
+    disassembler_.disassemble(pc_);
     u8 inst_idx = imm8();
     GB_ASSERT(inst_idx <= 255 || inst_idx >= 0);
     return instruction_table()[inst_idx](this);
