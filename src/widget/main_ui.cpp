@@ -187,7 +187,8 @@ static const char* FMT[] = {
 };
 
 void Widgets::drawCPURegisters() {
-  if (!show_cpu_registers_) {
+  if (!show_cpu_registers_ || !gameboy_) {
+    show_cpu_registers_ = false;
     return;
   }
 
