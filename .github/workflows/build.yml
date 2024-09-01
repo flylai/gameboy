@@ -32,12 +32,14 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake ..
+          cmake .. -DCMAKE_BUILD_TYPE=Release
           make
           cd ..
 
       - name: Set up Tests
         run: |
+          mkdir tests/
+          cp tools/download_test.sh tests/
           cd tests
           bash ./download_test.sh
           cd ..
@@ -51,7 +53,7 @@ jobs:
       - name: Generate test report
         run: |
           echo "Generating test report..."
-          python3 ./tests/generate_test_report.py ${{ github.sha }} ./build/test_detail.json > ./build/README.md
+          python3 ./tools/generate_test_report.py ${{ github.sha }} ./build/test_detail.json > ./build/README.md
           git fetch --all
           git checkout test_report
           mv ./build/README.md ./

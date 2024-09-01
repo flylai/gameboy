@@ -14,6 +14,8 @@ set(THIRD_PARTY_DIR ${SRC_DIR}/3rdparty)
 set(IMGUI_DIR ${THIRD_PARTY_DIR}/imgui)
 
 if (EMSCRIPTEN)
+    set(PRELOAD_FILE_DIR ${ROOT_DIR}/roms/)
+
     list(APPEND LINK_FLAGS_LIST
             "-s USE_PTHREADS=1"
             "-s PTHREAD_POOL_SIZE=1"
@@ -28,6 +30,7 @@ if (EMSCRIPTEN)
             "-s NO_EXIT_RUNTIME=0"
             "-s ASSERTIONS=1"
             "--shell-file ${SRC_DIR}/wasm.html"
+            "--preload-file ${PRELOAD_FILE_DIR}@/roms/"
             "--shared-memory"
     )
     string(JOIN " " LINK_FLAGS ${LINK_FLAGS_LIST})
@@ -94,6 +97,7 @@ if (NOT EMSCRIPTEN)
             ${GB_SRCS}
     )
     target_compile_options(gb_test PRIVATE -O3)
+    target_compile_definitions(gb_test PRIVATE GB_TEST)
     target_link_libraries(gameboy glfw OpenGL::GL m pthread dl)
     target_link_libraries(gb_test GTest::gtest_main)
 endif ()

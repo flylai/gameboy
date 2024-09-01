@@ -371,7 +371,7 @@ void Widgets::drawDisassembler() {
   ImGuiListClipper clipper;
 
   u16 record_count = disassembler.recordCount();
-  u16 cond{};
+  [[maybe_unused]] u16 cond{};
   u32 pc_item_idx{};
   clipper.Begin(record_count);
   // make a copy. do not use the origin data directly

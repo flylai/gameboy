@@ -31,15 +31,23 @@ jobs:
       - name: Set up Emscripten
         uses: mymindstorm/setup-emsdk@v14
 
+      - name: Download Preload ROMs
+        run: |
+          mkdir roms
+          cp tools/download_demo.sh roms/
+          cd roms
+          bash ./download_demo.sh
+          cd ..
+
       - name: Build project
         run: |
           mkdir wasm-build
           cd wasm-build
-          emcmake cmake ..
+          emcmake cmake .. -DCMAKE_BUILD_TYPE=Release
           make
           mkdir target_output
           mv gameboy.html index.html
-          mv gameboy.wasm index.html gameboy.worker.js gameboy.js target_output/
+          mv gameboy.wasm index.html gameboy.worker.js gameboy.js gameboy.data target_output/
           # Add headers for wasm
           echo -e "/*\n  Access-Control-Allow-Origin: *\n  Cross-Origin-Embedder-Policy: require-corp\n  Cross-Origin-Opener-Policy: same-origin\n" > target_output/_headers
           cd ..

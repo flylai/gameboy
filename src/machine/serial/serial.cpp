@@ -8,11 +8,13 @@ void Serial::tick() {
     SB(SB() << 1 | 1);
     if (--count_ == 0) {
       enable(false);
+#if defined(GB_TEST) || !defined(NDEBUG)
       if (isprint(buffer_)) {
         GB_LOG(INFO) << buffer_;
       } else {
         GB_LOG(INFO) << "0x" << std::hex << (u32) buffer_;
       }
+#endif // defined(GB_TEST) || defined(NDEBUG)
       if (data_ != nullptr) {
         data_->push(buffer_);
       }

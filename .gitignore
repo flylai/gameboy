@@ -5,6 +5,7 @@
 **/.cache/
 **/res/
 **/tests/*
+**/roms/
 !**/tests/download_test.sh
 !**/tests/generate_test_report.py
 compile_commands.json
