@@ -27,7 +27,7 @@ inline static T setBitN(T val, int n) {
   return clearBitN(val, n) | (1 << n);
 }
 
-#ifndef NDEBUG
+#ifdef NDEBUG
 #define GB_ASSERT(IGNORE)
 #else
 #define GB_ASSERT(COND) assert((COND))

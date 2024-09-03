@@ -68,7 +68,7 @@ public:
   }
 
   u8 get(u16 addr) const override {
-#ifdef NDEBUG
+#ifndef NDEBUG
     if (accessType(addr) == AccessType::kW) [[unlikely]] {
       return 0xff;
     }
@@ -77,7 +77,7 @@ public:
   }
 
   void set(u16 addr, u8 val) override {
-#ifdef NDEBUG
+#ifndef NDEBUG
     if (accessType(addr) == AccessType::kR) [[unlikely]] {
       return;
     }
