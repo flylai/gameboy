@@ -37,10 +37,9 @@ bool updateTileMap(GameBoy* gb, GLuint* out_texture, int* out_width, int* out_he
   if (!gb) {
     return false;
   }
-  constexpr gb::u16 VRAM_BASE       = 0x8000;
   constexpr gb::u16 MAX_TILE_COUNT  = (0x97ff - 0x8000 + 1) / 16;
-  constexpr gb::u16 TILE_PER_ROW    = 16;
-  constexpr gb::u16 TILE_PER_COL    = MAX_TILE_COUNT / 16;
+  constexpr gb::u16 TILE_PER_ROW    = 24;
+  constexpr gb::u16 TILE_PER_COL    = MAX_TILE_COUNT / TILE_PER_ROW;
   constexpr gb::u16 WIDTH           = TILE_PER_ROW * 8;
   constexpr gb::u16 HEIGHT          = TILE_PER_COL * 8;
   gb::u8 pixels[WIDTH * HEIGHT * 3] = {0};
@@ -49,12 +48,12 @@ bool updateTileMap(GameBoy* gb, GLuint* out_texture, int* out_width, int* out_he
   for (gb::u16 addr = VRAM_BASE; addr < 0x97ff; addr += 16) {
     for (gb::u8 i = 0; i < 8; i++) {
       // 3 means RGB,
-      gb::u32 offset = (tile_idx % 16) * 8 * 3              // x offset
-                       + ((tile_idx / 16) * 8) * 16 * 8 * 3 // y offset
+      gb::u32 offset = (tile_idx % TILE_PER_ROW) * 8 * 3                        // x offset
+                       + ((tile_idx / TILE_PER_ROW) * 8) * TILE_PER_ROW * 8 * 3 // y offset
               ;
       gb::u16 hi = gb->memory_bus_.get(VRAM_BASE + tile_idx * 16 + i * 2);
       gb::u16 lo = gb->memory_bus_.get(VRAM_BASE + tile_idx * 16 + i * 2 + 1);
-      decode_tile(hi << 8 | lo, pixels + offset + i * 16 * 8 * 3);
+      decode_tile(hi << 8 | lo, pixels + offset + i * TILE_PER_ROW * 8 * 3);
     }
     tile_idx++;
   }
@@ -130,13 +129,14 @@ static bool updateGameboyLCD(GameBoy* gb, GLuint* out_texture, int* out_width, i
 }
 
 void Widgets::drawControlWindow() {
-  ImGui::SetNextWindowPos(ImVec2(15, 0), ImGuiCond_Once);
+  ImGui::SetNextWindowPos(ImVec2(10, 0), ImGuiCond_Once);
   ImGui::Begin("Control", nullptr, ImGuiWindowFlags_NoResize);
 
   ImGui::Checkbox("Frame Rate", &show_frame_rate_);
   ImGui::Checkbox("Tile Map", &show_tile_map_);
   ImGui::Checkbox("CPU Registers", &show_cpu_registers_);
   ImGui::Checkbox("Disassembler", &show_disassembler_);
+  ImGui::Checkbox("Memory Editor", &show_memory_editor_);
   ImGui::Checkbox("Game", &show_game_);
 
   ImGui::End();
@@ -147,8 +147,7 @@ void Widgets::drawGameLCD() {
     return;
   }
   ImGui::SetNextWindowSize(ImVec2(LCD_WIDTH, LCD_HEIGHT), ImGuiCond_FirstUseEver);
-  ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x / 2 - ImGui::GetWindowWidth() / 2, -1),
-                          ImGuiCond_Once);
+  ImGui::SetNextWindowPos(ImVec2(780, 0), ImGuiCond_Once);
   int game_texture_width  = 0;
   int game_texture_height = 0;
   GLuint game_texture_id  = 0;
@@ -169,8 +168,8 @@ void Widgets::drawTileMap() {
   int tile_texture_height = 0;
   GLuint tile_texture_id  = 0;
 
-  ImGui::SetNextWindowPos(ImVec2(180, 145), ImGuiCond_Once);
-  ImGui::Begin("Tile Map", &show_tile_map_, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize);
+  ImGui::SetNextWindowPos(ImVec2(180, 175), ImGuiCond_Once);
+  ImGui::Begin("Tile Map", &show_tile_map_, ImGuiWindowFlags_NoScrollbar /*| ImGuiWindowFlags_NoResize*/);
   updateTileMap(gameboy_, &tile_texture_id, &tile_texture_width, &tile_texture_height);
   ImGui::Text("pointer = %x", tile_texture_id);
   ImGui::Text("size = %d x %d", tile_texture_width, tile_texture_height);
@@ -195,7 +194,7 @@ void Widgets::drawCPURegisters() {
   static int v       = 16;
   const auto& cpu    = gameboy_->cpu_;
   const auto& memory = gameboy_->memory_bus_;
-  ImGui::SetNextWindowPos(ImVec2(15, 145), ImGuiCond_Once);
+  ImGui::SetNextWindowPos(ImVec2(10, 175), ImGuiCond_Once);
   ImGui::Begin("CPU Registers", &show_cpu_registers_,
                ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoResize);
 
@@ -340,7 +339,7 @@ void Widgets::drawDisassembler() {
   }
   gameboy_->cpu_.disassembler().enable();
 
-  ImGui::SetNextWindowPos(ImVec2(950, 180), ImGuiCond_Once);
+  ImGui::SetNextWindowPos(ImVec2(462, 0), ImGuiCond_Once);
   ImGui::SetNextWindowSize(ImVec2(315, 400), ImGuiCond_Once);
   ImGui::Begin("Disassembler", &show_disassembler_, ImGuiWindowFlags_NoScrollbar);
 
@@ -458,6 +457,28 @@ void Widgets::drawDisassembler() {
   ImGui::End();
 }
 
+void Widgets::drawMemoryViewer() {
+  if (!show_memory_editor_) {
+    return;
+  }
+  constexpr u32 mem_size          = 0x10000;
+  constexpr u32 base_display_addr = 0x0000;
+  MemoryEditor::Sizes s;
+  memory_editor_.CalcSizes(s, mem_size, base_display_addr);
+  ImGui::SetNextWindowPos(ImVec2(225, 405), ImGuiCond_Once);
+  ImGui::SetNextWindowSize(ImVec2(s.WindowWidth, s.WindowWidth * 0.60f), ImGuiCond_FirstUseEver);
+  ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(s.WindowWidth, FLT_MAX));
+
+  ImGui::Begin("Memory Viewer", &show_memory_editor_, ImGuiWindowFlags_NoScrollbar);
+  memory_editor_.DrawContents(nullptr, mem_size, base_display_addr);
+  if (memory_editor_.ContentsWidthChanged) {
+    memory_editor_.CalcSizes(s, mem_size, base_display_addr);
+    ImGui::SetWindowSize(ImVec2(s.WindowWidth, ImGui::GetWindowSize().y));
+  }
+
+  ImGui::End();
+}
+
 void Widgets::drawFrameRate() {
   if (!show_frame_rate_) {
     return;
@@ -471,8 +492,9 @@ void Widgets::drawFrameRate() {
   frame_rate_buffer_.push(frameRate);
   cpu_speed_buffer_.push((f32) gameboy_->rtc_.cpuSpeed());
 
-  ImGui::SetNextWindowPos(ImVec2(ImGui::GetMainViewport()->Size.x - 330, -1), ImGuiCond_Once);
-  ImGui::Begin("Frame Rate", &show_frame_rate_, ImGuiWindowFlags_AlwaysAutoResize);
+  ImGui::SetNextWindowPos(ImVec2(143, 0), ImGuiCond_Once);
+  ImGui::SetNextWindowSize(ImVec2(316, 169), ImGuiCond_Once);
+  ImGui::Begin("Frame Rate", &show_frame_rate_, ImGuiWindowFlags_NoResize);
 
 
   char buf[80];
@@ -494,6 +516,7 @@ void Widgets::draw() {
   drawGameLCD();
   drawCPURegisters();
   drawDisassembler();
+  drawMemoryViewer();
   drawFrameRate();
 }
 

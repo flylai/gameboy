@@ -10,3 +10,6 @@
 [submodule "src/3rdparty/miniaudio"]
 	path = src/3rdparty/miniaudio
 	url = https://github.com/mackron/miniaudio.git
+[submodule "src/3rdparty/imgui_club"]
+	path = src/3rdparty/imgui_club
+	url = https://github.com/ocornut/imgui_club.git

@@ -46,6 +46,7 @@ include_directories(${THIRD_PARTY_DIR}/nameof/include)
 include_directories(${THIRD_PARTY_DIR}/imgui)
 include_directories(${THIRD_PARTY_DIR}/imgui/backends)
 include_directories(${THIRD_PARTY_DIR}/miniaudio)
+include_directories(${THIRD_PARTY_DIR}/imgui_club)
 include_directories(${SRC_DIR})
 
 add_subdirectory(${THIRD_PARTY_DIR}/nameof)
