@@ -1,10 +1,11 @@
 # Gameboy Emulator
 
-This is a another Gameboy emulator written in C++.
+This is a another Gameboy emulator written in C++. [Try Live Demo](https://gameboy.flylai.com)!
 
-All the core components are implemented, including CPU, PPU, APU, and MBCs, with cycle-accurate timing(not highly
+All the core components are implemented, including the CPU, PPU, APU, and MBCs, with cycle-accurate timing(not highly
 accurate though).
 
+![Super Mario Land1](docs/imgs/super_mario_land1.gif)
 ![Super Mario Land2](docs/imgs/super_mario_land2.gif)
 ![Super Mario Land3](docs/imgs/super_mario_land3.gif)
 
@@ -16,6 +17,9 @@ Tested on Linux, but should work on other platforms.
 
 * [CMake](https://cmake.org/)
 * [GLFW](https://www.glfw.org/)
+* [Emscripten](https://emscripten.org/) (WASM Build)
+
+### Build
 
 ```bash
 git clone --recursive https://github.com/flylai/gameboy.git
@@ -23,14 +27,30 @@ cd gameboy
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
+# If you want to build to WASM, use the following command
+# emcmake cmake .. -DCMAKE_BUILD_TYPE=Release
 cmake --build . --parallel $(nproc)
 ```
 
 ## Usage
 
+### General
+
 ```bash
 ./gameboy path/to/rom
 ```
+
+### WASM
+
+[Python3](https://www.python.org/downloads/) is Required.
+
+```bash
+# Copy the `simple_server.py` to your build folder
+cp tools/simple_server.py ./build
+python3 simple_server.py
+```
+
+Open your browser and visit [http://127.0.0.1:8000](http://127.0.0.1:8000), enjoy it!
 
 ## Controls
 
