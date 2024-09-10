@@ -98,5 +98,4 @@ branch.
 * [https://gekkio.fi/files/gb-docs/gbctr.pdf](https://gekkio.fi/files/gb-docs/gbctr.pdf)
 * [https://nightshade256.github.io/2021/03/27/gb-sound-emulation.html](https://nightshade256.github.io/2021/03/27/gb-sound-emulation.html)
 * [https://www.reddit.com/r/EmuDev/comments/5gkwi5/comment/dat3zni/](https://www.reddit.com/r/EmuDev/comments/5gkwi5/comment/dat3zni/)
-* [https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7](https://rgbds.gbdev.io/docs/v0.7.0/gbz80.7)
 * [https://hacktix.github.io/GBEDG/](https://hacktix.github.io/GBEDG/)
