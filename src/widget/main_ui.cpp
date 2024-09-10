@@ -322,9 +322,9 @@ void Widgets::drawCPURegisters() {
     ImGui::TableSetColumnIndex(0);
     ImGui::TextColored(color::Aqua, "%d", cpu.IME());
     ImGui::TableSetColumnIndex(1);
-    ImGui::TextColored(color::DeepSkyBlue, FMT[v == 16 ? v + 1 : v], memory.get(IE_BASE));
+    ImGui::TextColored(color::DeepSkyBlue, FMT[v], memory.get(IE_BASE));
     ImGui::TableSetColumnIndex(2);
-    ImGui::TextColored(color::DeepSkyBlue, FMT[v == 16 ? v + 1 : v], memory.get(IF_BASE));
+    ImGui::TextColored(color::DeepSkyBlue, FMT[v], memory.get(IF_BASE));
     ImGui::EndTable();
   }
 
