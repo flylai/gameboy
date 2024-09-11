@@ -26,6 +26,7 @@ private:
   void drawControlWindow();
 
   int scale_ = 3;
+  int palette_names_idx_{};
   void drawGameLCD();
 
   void drawTileMap();

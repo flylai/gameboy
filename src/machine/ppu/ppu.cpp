@@ -5,6 +5,15 @@
 namespace gb {
 // https://hacktix.github.io/GBEDG/ppu/
 
+enum class ColorType : u8 {
+  kALPHA = 0,
+  kBLUE,
+  kGREEN,
+  kRED,
+};
+
+static constexpr u8 getColor(u32 color, ColorType type) { return (color >> ((u8) type * 8)) & 0xff; }
+
 void PPU::dmaUpdate() {
   if (!dma_enable_) {
     return;
@@ -149,8 +158,9 @@ void PPU::mixPixel() {
   u8 win_color{};
 
   bg_color = applyPalette(background_pixel_.color, background_pixel_.palette);
-  setPixel(buffer, x, y, default_palette_[bg_color][0], default_palette_[bg_color][1],
-           default_palette_[bg_color][2]);
+  setPixel(buffer, x, y, getColor(dmg_palette_[bg_color], ColorType::kRED),
+           getColor(dmg_palette_[bg_color], ColorType::kGREEN),
+           getColor(dmg_palette_[bg_color], ColorType::kBLUE));
   scanline_rendered_[x] = bg_color != 0;
 
   if (fetcher_x_ >= ppu_reg_.WX() - 7   //
@@ -158,8 +168,10 @@ void PPU::mixPixel() {
       && ppu_reg_.WY() <= ppu_reg_.LY() //
       && ppu_reg_.WX() <= 166) {
     win_color = applyPalette(window_pixel_.color, window_pixel_.palette);
-    setPixel(buffer, x, y, default_palette_[win_color][0], default_palette_[win_color][1],
-             default_palette_[win_color][2]);
+    if (win_color)
+      setPixel(buffer, x, y, getColor(dmg_palette_[win_color], ColorType::kRED),
+               getColor(dmg_palette_[win_color], ColorType::kGREEN),
+               getColor(dmg_palette_[win_color], ColorType::kBLUE));
     scanline_rendered_[x] = win_color != 0;
   }
 }
@@ -273,8 +285,10 @@ void PPU::fetchAndDrawSpriteTileData() {
 
       u8 sprite_color           = applyPalette(sprite_pixel_.color, sprite_pixel_.palette);
       if (sprite_color) {
-        setPixel(lcd_data_.get(), pixel_x, ppu_reg_.LY(), default_palette_[sprite_color][0],
-                 default_palette_[sprite_color][1], default_palette_[sprite_color][2]);
+        setPixel(lcd_data_.get(), pixel_x, ppu_reg_.LY(),
+                 getColor(dmg_palette_[sprite_color], ColorType::kRED),
+                 getColor(dmg_palette_[sprite_color], ColorType::kGREEN),
+                 getColor(dmg_palette_[sprite_color], ColorType::kBLUE));
       }
     }
 

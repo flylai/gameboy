@@ -50,6 +50,12 @@ class PPU : public MemoryAccessor {
   Pixel sprite_pixel_;
 
 public:
+#define DEF(NAME, C0, C1, C2, C3) k##NAME,
+  enum class Palette : u8 {
+#include "palette.h"
+  };
+#undef DEF
+
   u8 get(u16 addr) const override {
     if (addr >= 0xfe00 && addr <= 0xfe9f) {
       if (!dmaRunning()) {
@@ -101,6 +107,8 @@ public:
   }
 
   const LCDData &lcdData() const { return lcd_data_; }
+
+  void setPalette(Palette palette) { dmg_palette_ = palettes_[static_cast<u8>(palette)]; }
 
   void memoryBus(MemoryBus *memory_bus) {
     memory_bus_ = memory_bus;
@@ -156,12 +164,18 @@ private:
   std::priority_queue<ObjectAttribute> sprite_buffer_;
   u16 dots_{};
 
-  static constexpr u8 default_palette_[][3] = {
-          {153, 161, 120},
-          {87, 93, 67},
-          {42, 46, 32},
-          {10, 10, 2},
+#define DEF(NAME, C0, C1, C2, C3) static constexpr const u32 NAME##_palette_[] = {C0, C1, C2, C3};
+#include "palette.h"
+#undef DEF
+
+#define DEF(NAME, C0, C1, C2, C3) NAME##_palette_,
+
+  static constexpr const u32 *palettes_[] = {
+#include "palette.h"
   };
+#undef DEF
+
+  const u32 *dmg_palette_{palettes_[(u8) Palette::klcd]};
 };
 
 } // namespace gb

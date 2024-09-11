@@ -156,6 +156,17 @@ void Widgets::drawGameLCD() {
   ImGui::Text("pointer = %x", game_texture_id);
   ImGui::Text("size = %d x %d", game_texture_width, game_texture_height);
   ImGui::SliderInt("Scale", &scale_, 1, 16);
+  {
+#define DEF(NAME, C0, C1, C2, C3) #NAME,
+    const char* palette_names[] = {
+#include "machine/ppu/palette.h"
+    };
+#undef DEF
+    if (ImGui::Combo("Palette", &palette_names_idx_, palette_names, IM_ARRAYSIZE(palette_names),
+                     IM_ARRAYSIZE(palette_names))) {
+      gameboy_->ppu_.setPalette((PPU::Palette) palette_names_idx_);
+    }
+  }
   ImGui::Image((void*) (intptr_t) game_texture_id, ImVec2(game_texture_width, game_texture_height));
   ImGui::End();
 }
@@ -501,11 +512,11 @@ void Widgets::drawFrameRate() {
 
   sprintf(buf, "Render Frame Rate: %.1f FPS", frameRate);
   ImGui::PlotLines("", circle_buffer_getter, &frame_rate_buffer_, frame_rate_buffer_.size(), 0, buf, 30.0f,
-                   240.0f, ImVec2(300, 70));
+                   240.0f, ImVec2(300, 65));
 
   sprintf(buf, "CPU Speed: %lu Hz", gameboy_->rtc_.cpuSpeed());
   ImGui::PlotLines("", circle_buffer_getter, &cpu_speed_buffer_, cpu_speed_buffer_.size(), 0, buf, 1000000.f,
-                   40000000.f, ImVec2(300, 70));
+                   40000000.f, ImVec2(300, 65));
 
   ImGui::End();
 }
