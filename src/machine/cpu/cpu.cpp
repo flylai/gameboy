@@ -1538,15 +1538,13 @@ u8 CPU::handleInterrupt() {
   };
   // interrupt priority
   // https://gbdev.io/pandocs/Interrupts.html#interrupt-priorities
-  for (u8 i = 0; i < sizeof(interrupt_table) / sizeof(interrupt_table[0]); i++) {
-    if (interrupt_mask & (1 << i)) {
-      push16(PC());
-      PC(interrupt_table[i]);
-      memory_bus_->set(IF_BASE, memory_bus_->get(IF_BASE) & ~(1 << i));
-
-      break;
-    }
+  const u8 interrupt_bit = __builtin_ctz(interrupt_mask);
+  if (interrupt_bit < sizeof(interrupt_table) / sizeof(interrupt_table[0])) {
+    push16(PC());
+    PC(interrupt_table[interrupt_bit]);
+    memory_bus_->set(IF_BASE, memory_bus_->get(IF_BASE) & ~(1 << interrupt_bit));
   }
+
   IME(false);
   tick();
   // irq spent 5 M-cycles = 20 T-cycles
